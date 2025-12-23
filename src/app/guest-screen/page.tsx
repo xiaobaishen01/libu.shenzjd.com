@@ -71,7 +71,7 @@ export default function GuestScreen() {
             <div className="col-span-5">金额</div>
           </div>
 
-          {/* 数据行 - 3行垂直布局，参考 gift-book 格式 */}
+          {/* 数据行 - 4行垂直布局：姓名、类型、大写金额、小写金额 */}
           <div className="gift-book-grid">
             {/* 第1行：姓名（竖排） */}
             <div className="gift-book-row">
@@ -113,7 +113,7 @@ export default function GuestScreen() {
               })}
             </div>
 
-            {/* 第3行：金额（竖排：大写 + 数字） */}
+            {/* 第3行：大写金额（竖排） */}
             <div className="gift-book-row">
               {Array.from({ length: 12 }).map((_, idx) => {
                 const gift = data.gifts[idx];
@@ -124,15 +124,30 @@ export default function GuestScreen() {
                     className={`book-cell amount-cell ${isLatest ? 'bg-yellow-100 animate-pulse' : ''}`}
                   >
                     {gift ? (
-                      <div className="flex flex-col items-center w-full">
-                        <div className="amount-chinese">
-                          {Utils.amountToChinese(gift.amount)}
-                        </div>
-                        <div className="amount-number">
-                          ¥{gift.amount}
-                        </div>
+                      <div className="amount-chinese">
+                        {Utils.amountToChinese(gift.amount)}
                       </div>
-                    ) : null}
+                    ) : <span className="text-gray-200">+</span>}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 第4行：小写金额（竖排） */}
+            <div className="gift-book-row">
+              {Array.from({ length: 12 }).map((_, idx) => {
+                const gift = data.gifts[idx];
+                const isLatest = idx === data.gifts.length - 1;
+                return (
+                  <div
+                    key={idx}
+                    className={`amount-number-cell ${isLatest ? 'bg-yellow-100 animate-pulse' : ''}`}
+                  >
+                    {gift ? (
+                      <div className="amount-number-text">
+                        ¥{gift.amount}
+                      </div>
+                    ) : <span className="text-gray-200">+</span>}
                   </div>
                 );
               })}

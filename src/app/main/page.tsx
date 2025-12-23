@@ -404,7 +404,7 @@ export default function MainPage() {
                 </div>
               </div>
 
-              {/* 礼簿内容 - 3行垂直布局，参考 gift-book 格式 */}
+              {/* 礼簿内容 - 4行垂直布局：姓名、类型、大写金额、小写金额 */}
               <div className="gift-book-grid">
                 {/* 第1行：姓名（竖排） */}
                 <div className="gift-book-row">
@@ -440,7 +440,7 @@ export default function MainPage() {
                   })}
                 </div>
 
-                {/* 第3行：金额（竖排：大写 + 数字） */}
+                {/* 第3行：大写金额（竖排） */}
                 <div className="gift-book-row">
                   {Array.from({ length: 12 }).map((_, idx) => {
                     const gift = displayGifts[idx];
@@ -448,15 +448,27 @@ export default function MainPage() {
                     return (
                       <div key={idx} className="book-cell amount-cell">
                         {hasData ? (
-                          <div className="flex flex-col items-center w-full">
-                            <div className="amount-chinese">
-                              {Utils.amountToChinese(gift.data!.amount)}
-                            </div>
-                            <div className="amount-number">
-                              ¥{gift.data!.amount}
-                            </div>
+                          <div className="amount-chinese">
+                            {Utils.amountToChinese(gift.data!.amount)}
                           </div>
-                        ) : null}
+                        ) : <span className="text-gray-300">+</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 第4行：小写金额（竖排） */}
+                <div className="gift-book-row">
+                  {Array.from({ length: 12 }).map((_, idx) => {
+                    const gift = displayGifts[idx];
+                    const hasData = gift && gift.data && !gift.data.abolished;
+                    return (
+                      <div key={idx} className="amount-number-cell">
+                        {hasData ? (
+                          <div className="amount-number-text">
+                            ¥{gift.data!.amount}
+                          </div>
+                        ) : <span className="text-gray-300">+</span>}
                       </div>
                     );
                   })}

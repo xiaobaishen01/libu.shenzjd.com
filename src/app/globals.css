@@ -249,7 +249,7 @@ input[type="checkbox"].themed-ring:focus {
 /* ==================== 礼簿表格样式 ==================== */
 .gift-book-grid {
   display: grid;
-  grid-template-rows: 3fr 1fr 3fr;
+  grid-template-rows: 3fr 1fr 3fr 2fr;
   border-top: 2px solid var(--primary-border-color);
   min-height: 0;
 }
@@ -263,6 +263,10 @@ input[type="checkbox"].themed-ring:focus {
 .gift-book-row:nth-child(1),
 .gift-book-row:nth-child(3) {
   min-height: 33.3%;
+}
+
+.gift-book-row:nth-child(4) {
+  min-height: 22%;
 }
 
 .book-cell {
@@ -323,16 +327,37 @@ input[type="checkbox"].themed-ring:focus {
   letter-spacing: 1.5px;
   text-align: center;
   padding: 15px 0;
-  flex: 1;
   overflow: hidden;
   font-size: 25px;
   color: #333;
   font-family: 'KaiTi', '楷体', serif;
 }
 
-.amount-number {
-  font-size: 12px;
+.amount-number-cell {
+  display: grid;
+  place-items: center;
+  font-size: 16px;
   color: #666;
+  font-weight: normal;
+  font-family: 'Courier New', monospace;
+  padding: 8px 2px;
+  border-right: 2px solid var(--primary-border-color);
+  border-bottom: 2px solid var(--primary-border-color);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.amount-number-cell:first-child {
+  border-left: 2px solid var(--primary-border-color);
+}
+
+.amount-number-cell:hover {
+  background-color: var(--link-hover-bg);
+}
+
+.amount-number-text {
+  writing-mode: vertical-lr;
+  letter-spacing: 2px;
 }
 
 /* ==================== 动画和过渡 ==================== */
