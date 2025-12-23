@@ -1,0 +1,58 @@
+电子礼簿系统 - 完整文件清单
+==============================
+
+配置文件 (7个)
+--------------
+package.json          - 依赖和脚本配置
+tsconfig.json         - TypeScript 配置
+tailwind.config.ts    - Tailwind CSS 配置
+postcss.config.js     - PostCSS 配置
+next.config.ts        - Next.js 配置
+.gitignore            - Git 忽略文件
+start.sh              - Linux/Mac 启动脚本
+start.bat             - Windows 启动脚本
+
+文档 (8个)
+----------
+README.md             - 项目说明文档
+INSTALL.md            - 安装指南
+START.md              - 快速启动指南
+STRUCTURE.md          - 项目结构说明
+PROJECT_SUMMARY.md    - 项目总结
+QUICK_REFERENCE.md    - 快速参考卡片
+FIXES.md              - 修复说明
+FILE_LIST.txt         - 本文件
+
+源代码 (11个)
+-------------
+src/app/
+  ├── layout.tsx            - 根布局
+  ├── globals.css           - 全局样式
+  ├── page.tsx              - 首页（自动路由）
+  ├── not-found.tsx         - 404 页面
+  ├── setup/
+  │   └── page.tsx          - 事项创建页面
+  ├── main/
+  │   └── page.tsx          - 主界面（录入+展示）
+  └── guest-screen/
+      └── page.tsx          - 副屏页面
+
+src/lib/
+  ├── crypto.ts             - 加密/解密工具
+  ├── utils.ts              - 通用工具函数
+  └── github.ts             - GitHub API 服务
+
+src/types/
+  └── index.ts              - 类型定义
+
+总计: 26 个文件
+==============================
+
+快速开始:
+  1. npm install
+  2. npm run dev
+  3. 访问 http://localhost:3000
+
+或使用启动脚本:
+  - Linux/Mac: ./start.sh
+  - Windows:   start.bat

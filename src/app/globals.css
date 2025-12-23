@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'KaiTi';
+  src: local('KaiTi'), local('楷体');
+  font-weight: 400;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+.font-kaiti {
+  font-family: 'KaiTi', '楷体', serif;
+}
+
+/* 打印样式 */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
