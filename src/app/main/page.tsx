@@ -403,7 +403,7 @@ export default function MainPage() {
                           )
                         )
                       }
-                      className="w-16 text-center border rounded mx-1 themed-ring"
+                      className="w-4 text-center border rounded mx-1 text-xs p-1 h-5"
                     />
                     / {totalPages} 页
                   </div>
