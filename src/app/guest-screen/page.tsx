@@ -77,7 +77,7 @@ export default function GuestScreen() {
         </div>
 
         {/* 礼金列表 */}
-        <div className="gift-book-frame">
+        <div className="gift-book-frame guest-screen-frame">
           <div className="gift-book-columns">
             {Array.from({ length: 12 }).map((_, idx) => {
               const gift = data.gifts[idx];

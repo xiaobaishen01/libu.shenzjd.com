@@ -824,3 +824,8 @@ input[type="checkbox"].themed-ring:checked {
     padding: 0.75rem;
   }
 }
+
+/* ==================== 副屏样式 ==================== */
+.guest-screen-frame {
+  padding: 0 !important;
+}
