@@ -110,9 +110,8 @@ export default function MainPage() {
     console.log("[Main] Records count:", records.length);
     console.log("[Main] Using password length:", decryptPassword?.length);
 
-    // 只解密第一页（12条）
-    const PAGE_SIZE = 12;
-    const decrypted = records.slice(0, PAGE_SIZE).map((r: GiftRecord) => {
+    // 解密所有数据
+    const decrypted = records.map((r: GiftRecord) => {
       const data = CryptoService.decrypt<GiftData>(
         r.encryptedData,
         decryptPassword
