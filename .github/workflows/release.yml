@@ -199,19 +199,12 @@ jobs:
             - 支持数据加密存储
             - 支持副屏展示
 
-          files: release-package.tar.gz
+          files: |
+            release-package.tar.gz
+            out/**/*.{html,css,js,json,txt}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Additional Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.get_tag.outputs.tag_name }}
-          files: |
-            out/**
-          token: ${{ secrets.GITHUB_TOKEN }}
-          append_body: true
 
       - name: Notify Success
         run: |
