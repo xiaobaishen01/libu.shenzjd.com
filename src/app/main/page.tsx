@@ -35,6 +35,32 @@ export default function MainPage() {
     type: "alert",
   });
 
+  // 详情弹窗状态
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    gift: GiftData | null;
+    index: number;
+  }>({
+    isOpen: false,
+    gift: null,
+    index: -1,
+  });
+
+  // 编辑表单状态（用于修改）
+  const [editFormData, setEditFormData] = useState<{
+    name: string;
+    amount: string;
+    type: "现金" | "微信" | "支付宝" | "其他";
+    remark: string;
+    isEditing: boolean;
+  }>({
+    name: "",
+    amount: "",
+    type: "现金",
+    remark: "",
+    isEditing: false,
+  });
+
   // 表单状态
   const [formData, setFormData] = useState({
     name: "",
@@ -344,6 +370,106 @@ export default function MainPage() {
     );
   };
 
+  // 打开详情弹窗
+  const openDetailModal = (gift: GiftData, index: number) => {
+    setDetailModal({ isOpen: true, gift, index });
+    setEditFormData({
+      name: gift.name,
+      amount: gift.amount.toString(),
+      type: gift.type,
+      remark: gift.remark || "",
+      isEditing: false,
+    });
+  };
+
+  // 关闭详情弹窗
+  const closeDetailModal = () => {
+    setDetailModal({ isOpen: false, gift: null, index: -1 });
+  };
+
+  // 删除记录
+  const handleDeleteGift = () => {
+    if (!detailModal.gift || detailModal.index === -1) return;
+
+    showConfirm(
+      "确认删除",
+      `确定要删除 ${detailModal.gift.name} 的记录吗？金额：¥${detailModal.gift.amount}`,
+      () => {
+        if (!event) return;
+
+        // 从 gifts 数组中移除
+        const newGifts = [...gifts];
+        newGifts.splice(detailModal.index, 1);
+        setGifts(newGifts);
+
+        // 从 localStorage 中移除
+        const key = `giftlist_gifts_${event.id}`;
+        const existing = JSON.parse(localStorage.getItem(key) || "[]");
+        existing.splice(detailModal.index, 1);
+        localStorage.setItem(key, JSON.stringify(existing));
+
+        // 同步到副屏
+        syncGuestScreen();
+
+        // 关闭弹窗
+        closeDetailModal();
+
+        // 显示成功提示
+        showAlert("删除成功", "记录已从礼簿中移除");
+      }
+    );
+  };
+
+  // 修改记录
+  const handleUpdateGift = () => {
+    if (!detailModal.gift || detailModal.index === -1 || !event) return;
+
+    const amount = parseFloat(editFormData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      showAlert("错误", "请输入有效的金额");
+      return;
+    }
+
+    if (!editFormData.name.trim()) {
+      showAlert("错误", "请输入姓名");
+      return;
+    }
+
+    // 更新数据
+    const updatedGift: GiftData = {
+      name: editFormData.name.trim(),
+      amount: amount,
+      type: editFormData.type,
+      remark: editFormData.remark || undefined,
+      timestamp: detailModal.gift.timestamp, // 保持原时间
+      abolished: false,
+    };
+
+    // 更新 gifts 数组
+    const newGifts = [...gifts];
+    newGifts[detailModal.index] = { ...newGifts[detailModal.index], data: updatedGift };
+    setGifts(newGifts);
+
+    // 更新 localStorage（需要重新加密）
+    const key = `giftlist_gifts_${event.id}`;
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    const encrypted = CryptoService.encrypt(updatedGift, password);
+    existing[detailModal.index] = {
+      ...existing[detailModal.index],
+      encryptedData: encrypted,
+    };
+    localStorage.setItem(key, JSON.stringify(existing));
+
+    // 同步到副屏
+    syncGuestScreen(updatedGift);
+
+    // 关闭弹窗
+    closeDetailModal();
+
+    // 显示成功提示
+    showAlert("修改成功", "记录已更新");
+  };
+
 
   return (
     <div className={`min-h-screen bg-gray-50 ${themeClass}`}>
@@ -550,11 +676,19 @@ export default function MainPage() {
                 {Array.from({ length: 12 }).map((_, idx) => {
                   const gift = displayGifts[idx];
                   const hasData = gift && gift.data && !gift.data.abolished;
+                  const actualIndex = (currentPage - 1) * 12 + idx;
                   return (
                     <div
                       key={idx}
                       className="gift-book-column"
                       data-col-index={idx}
+                      data-has-data={hasData ? "true" : "false"}
+                      onClick={() => {
+                        if (hasData) {
+                          openDetailModal(gift.data!, actualIndex);
+                        }
+                      }}
+                      style={{ cursor: hasData ? 'pointer' : 'default' }}
                     >
                       {/* 姓名区域 */}
                       <div className="book-cell name-cell column-top">
@@ -660,6 +794,161 @@ export default function MainPage() {
                   {modal.type === "confirm" ? "确定" : "确定"}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 详情弹窗 */}
+        {detailModal.isOpen && detailModal.gift && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-scale-in max-h-[90vh] overflow-y-auto">
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between mb-4 border-b pb-2">
+                <h3 className="text-xl font-bold themed-header">礼金详情</h3>
+                <button
+                  onClick={closeDetailModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* 详情信息 - 查看模式 */}
+              {!editFormData.isEditing ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="font-semibold text-gray-600">姓名：</div>
+                    <div className="font-bold text-lg">{detailModal.gift.name}</div>
+
+                    <div className="font-semibold text-gray-600">金额：</div>
+                    <div className="font-bold text-lg text-red-600">
+                      ¥{detailModal.gift.amount.toFixed(2)}
+                    </div>
+
+                    <div className="font-semibold text-gray-600">大写：</div>
+                    <div className="font-bold text-lg font-kaiti">
+                      {Utils.amountToChinese(detailModal.gift.amount)}
+                    </div>
+
+                    <div className="font-semibold text-gray-600">类型：</div>
+                    <div className="font-bold">{detailModal.gift.type}</div>
+
+                    <div className="font-semibold text-gray-600">时间：</div>
+                    <div className="text-gray-700">
+                      {(() => {
+                        const date = new Date(detailModal.gift.timestamp);
+                        const pad = (num: number) => num.toString().padStart(2, "0");
+                        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                      })()}
+                    </div>
+
+                    {detailModal.gift.remark && (
+                      <>
+                        <div className="font-semibold text-gray-600">备注：</div>
+                        <div className="col-span-2 text-gray-700 bg-gray-50 p-2 rounded">
+                          {detailModal.gift.remark}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 操作按钮 */}
+                  <div className="flex gap-3 mt-6 pt-4 border-t">
+                    <button
+                      onClick={() => setEditFormData({ ...editFormData, isEditing: true })}
+                      className="flex-1 themed-button-primary py-2 rounded-lg font-bold hover-lift"
+                    >
+                      ✏️ 修改
+                    </button>
+                    <button
+                      onClick={handleDeleteGift}
+                      className="flex-1 themed-button-danger py-2 rounded-lg font-bold"
+                    >
+                      🗑️ 删除
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* 编辑模式 */
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="themed-ring"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">金额</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editFormData.amount}
+                      onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })}
+                      className="themed-ring"
+                    />
+                    {editFormData.amount && !isNaN(parseFloat(editFormData.amount)) && (
+                      <div className="text-sm text-gray-600 mt-1 text-right themed-text">
+                        {Utils.amountToChinese(parseFloat(editFormData.amount))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                      收款类型：
+                    </label>
+                    <div className="flex flex-wrap gap-x-3 gap-y-2">
+                      {["现金", "微信", "支付宝", "其他"].map((type) => (
+                        <label key={type} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="edit-type"
+                            value={type}
+                            checked={editFormData.type === type}
+                            onChange={(e) =>
+                              setEditFormData({ ...editFormData, type: e.target.value as any })
+                            }
+                            className="themed-ring"
+                          />
+                          <span>{type}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                    <textarea
+                      value={editFormData.remark}
+                      onChange={(e) => setEditFormData({ ...editFormData, remark: e.target.value })}
+                      placeholder="备注内容（选填）"
+                      className="themed-ring"
+                      rows={2}
+                    />
+                  </div>
+
+                  {/* 操作按钮 */}
+                  <div className="flex gap-3 mt-6 pt-4 border-t">
+                    <button
+                      onClick={() => setEditFormData({ ...editFormData, isEditing: false })}
+                      className="flex-1 themed-button-secondary py-2 rounded-lg font-bold"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleUpdateGift}
+                      className="flex-1 themed-button-primary py-2 rounded-lg font-bold hover-lift"
+                    >
+                      💾 保存
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
