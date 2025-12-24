@@ -14,6 +14,9 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // 简单的错误提示状态
+  const [error, setError] = useState('');
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -47,12 +50,13 @@ export default function Home() {
     if (!selectedEvent || !password) return;
 
     setLoading(true);
+    setError('');
 
     try {
       // 验证密码
       const hash = CryptoService.hash(password);
       if (hash !== selectedEvent.passwordHash) {
-        alert('密码错误！');
+        setError('密码错误！');
         setLoading(false);
         return;
       }
@@ -71,7 +75,7 @@ export default function Home() {
       router.replace('/main');
     } catch (err) {
       console.error(err);
-      alert('登录失败: ' + err);
+      setError('登录失败: ' + err);
     } finally {
       setLoading(false);
     }
@@ -120,7 +124,7 @@ export default function Home() {
 
           {/* 当前会话信息 */}
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-            <div className="font-bold text-blue-900 mb-1 text-sm">当前登录：</div>
+            <div className="font-bold text-blue-900 mb-1 text-sm">当前事件：</div>
             <div className="text-sm text-blue-800 font-semibold">{currentSessionEvent?.name}</div>
             <div className="text-xs text-blue-600 mt-1">
               {currentSessionEvent && (() => {
@@ -147,12 +151,12 @@ export default function Home() {
               onClick={handleSwitchFromSession}
               className="w-full themed-button-secondary p-3 rounded-lg font-bold hover-lift"
             >
-              切换到其他事件
+              切换到其他事件（需重新输入密码）
             </button>
 
             {events.length > 1 && (
               <div className="pt-3 border-t themed-border">
-                <p className="text-sm text-gray-600 mb-2">快速切换：</p>
+                <p className="text-sm text-gray-600 mb-2">快速切换（需重新输入密码）：</p>
                 <div className="space-y-2">
                   {events.map((ev: any) => (
                     ev.id !== currentSessionEvent?.id && (
@@ -218,17 +222,25 @@ export default function Home() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
                 placeholder="请输入密码"
-                className="themed-ring"
+                className={`themed-ring ${error ? 'border-red-500' : ''}`}
                 autoFocus
               />
+              {error && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm animate-fade-in">
+                  {error}
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full themed-button-primary p-3 rounded-lg font-bold hover-lift"
+              className="w-full themed-button-primary p-3 rounded-lg font-bold hover-lift disabled:opacity-50"
             >
               {loading ? '登录中...' : '登录'}
             </button>
@@ -267,6 +279,16 @@ export default function Home() {
         <p className="text-gray-600">正在初始化...</p>
         <div className="mt-8 text-sm text-gray-500">
           <p>正在检查存储状态...</p>
+        </div>
+        {/* 快速测试入口 */}
+        <div className="mt-8">
+          <a
+            href="/test-data"
+            className="text-xs text-gray-400 hover:text-gray-600 underline"
+            title="快速生成测试数据"
+          >
+            测试数据生成器
+          </a>
         </div>
       </div>
     </div>

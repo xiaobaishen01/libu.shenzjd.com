@@ -1,40 +1,57 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Event, GiftData, GiftRecord } from '@/types';
-import { CryptoService } from '@/lib/crypto';
-import { Utils } from '@/lib/utils';
-import { GitHubService } from '@/lib/github';
-import * as XLSX from 'xlsx';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Event, GiftData, GiftRecord } from "@/types";
+import { CryptoService } from "@/lib/crypto";
+import { Utils } from "@/lib/utils";
+import { GitHubService } from "@/lib/github";
+import * as XLSX from "xlsx";
 
 export default function MainPage() {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [gifts, setGifts] = useState<
     { record: GiftRecord; data: GiftData | null }[]
   >([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  // 模态框状态
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "confirm" | "alert" | "prompt";
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    defaultValue?: string;
+    inputRef?: any;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert",
+  });
+
   // 表单状态
   const [formData, setFormData] = useState({
-    name: '',
-    amount: '',
-    type: '现金' as const,
-    remark: '',
+    name: "",
+    amount: "",
+    type: "现金" as const,
+    remark: "",
   });
-  const [chineseAmount, setChineseAmount] = useState('');
+  const [chineseAmount, setChineseAmount] = useState("");
 
   // GitHub 服务
   const [github, setGithub] = useState<GitHubService | null>(null);
 
   useEffect(() => {
     // 检查会话
-    const session = sessionStorage.getItem('currentEvent');
+    const session = sessionStorage.getItem("currentEvent");
     if (!session) {
-      router.replace('/');
+      router.replace("/");
       return;
     }
 
@@ -46,7 +63,7 @@ export default function MainPage() {
     loadData(event.id, password);
 
     // 检查 GitHub 配置
-    const githubConfig = localStorage.getItem('giftlist_github');
+    const githubConfig = localStorage.getItem("giftlist_github");
     if (githubConfig) {
       try {
         const config = JSON.parse(githubConfig);
@@ -57,22 +74,25 @@ export default function MainPage() {
 
   const loadData = async (eventId: string, pwd?: string) => {
     const records = JSON.parse(
-      localStorage.getItem(`giftlist_gifts_${eventId}`) || '[]'
+      localStorage.getItem(`giftlist_gifts_${eventId}`) || "[]"
     );
 
     // 使用传入的password或当前状态
     const decryptPassword = pwd || password;
 
-    console.log('[Main] Loading data for event:', eventId);
-    console.log('[Main] Records count:', records.length);
-    console.log('[Main] Using password length:', decryptPassword?.length);
+    console.log("[Main] Loading data for event:", eventId);
+    console.log("[Main] Records count:", records.length);
+    console.log("[Main] Using password length:", decryptPassword?.length);
 
     // 只解密第一页（12条）
     const PAGE_SIZE = 12;
     const decrypted = records.slice(0, PAGE_SIZE).map((r: GiftRecord) => {
-      const data = CryptoService.decrypt<GiftData>(r.encryptedData, decryptPassword);
+      const data = CryptoService.decrypt<GiftData>(
+        r.encryptedData,
+        decryptPassword
+      );
       if (!data) {
-        console.error('[Main] Failed to decrypt record:', r.id);
+        console.error("[Main] Failed to decrypt record:", r.id);
       }
       return {
         record: r,
@@ -89,7 +109,7 @@ export default function MainPage() {
     if (!isNaN(num)) {
       setChineseAmount(Utils.amountToChinese(num));
     } else {
-      setChineseAmount('');
+      setChineseAmount("");
     }
   };
 
@@ -118,17 +138,17 @@ export default function MainPage() {
 
       // 保存到 localStorage
       const key = `giftlist_gifts_${event.id}`;
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const existing = JSON.parse(localStorage.getItem(key) || "[]");
       existing.push(record);
       localStorage.setItem(key, JSON.stringify(existing));
 
       // 同步到 GitHub（如果配置）
       if (github) {
         try {
-          const allGifts = JSON.parse(localStorage.getItem(key) || '[]');
+          const allGifts = JSON.parse(localStorage.getItem(key) || "[]");
           await github.syncGifts(event.id, allGifts);
         } catch (err) {
-          console.error('GitHub sync failed:', err);
+          console.error("GitHub sync failed:", err);
         }
       }
 
@@ -136,18 +156,20 @@ export default function MainPage() {
       setGifts((prev) => [...prev, { record, data: giftData }]);
 
       // 重置表单
-      setFormData({ name: '', amount: '', type: '现金', remark: '' });
-      setChineseAmount('');
+      setFormData({ name: "", amount: "", type: "现金", remark: "" });
+      setChineseAmount("");
 
       // 聚焦
-      const nameInput = document.getElementById('name-input') as HTMLInputElement;
+      const nameInput = document.getElementById(
+        "name-input"
+      ) as HTMLInputElement;
       nameInput?.focus();
 
       // 同步副屏
       syncGuestScreen(giftData);
     } catch (err) {
       console.error(err);
-      alert('录入失败: ' + err);
+      alert("录入失败: " + err);
     } finally {
       setLoading(false);
     }
@@ -162,12 +184,11 @@ export default function MainPage() {
 
     const data = {
       eventName: event?.name,
-      theme:
-        event?.theme === 'festive' ? 'theme-festive' : 'theme-solemn',
+      theme: event?.theme === "festive" ? "theme-festive" : "theme-solemn",
       gifts: allGifts.slice(-12),
     };
 
-    localStorage.setItem('guest_screen_data', JSON.stringify(data));
+    localStorage.setItem("guest_screen_data", JSON.stringify(data));
   };
 
   // 分页
@@ -192,21 +213,25 @@ export default function MainPage() {
   const exportExcel = () => {
     const data = validGifts.map((g) => {
       const date = new Date(g.timestamp);
-      const pad = (num: number) => num.toString().padStart(2, '0');
-      const formattedTime = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      const pad = (num: number) => num.toString().padStart(2, "0");
+      const formattedTime = `${date.getFullYear()}-${pad(
+        date.getMonth() + 1
+      )}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(
+        date.getMinutes()
+      )}`;
 
       return {
         姓名: g.name,
         金额: g.amount,
         类型: g.type,
-        备注: g.remark || '',
+        备注: g.remark || "",
         时间: formattedTime,
       };
     });
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '礼金记录');
+    XLSX.utils.book_append_sheet(wb, ws, "礼金记录");
     XLSX.writeFile(wb, `${event?.name}_礼金簿.xlsx`);
   };
 
@@ -217,93 +242,169 @@ export default function MainPage() {
 
   // 打开副屏
   const openGuestScreen = () => {
-    window.open('/guest-screen', '_blank', 'width=1200,height=800');
+    window.open("/guest-screen", "_blank", "width=1200,height=800");
   };
 
   if (!event) return null;
 
   // 根据主题应用不同的容器类
-  const themeClass = event.theme === 'festive' ? 'theme-festive' : 'theme-solemn';
+  const themeClass =
+    event.theme === "festive" ? "theme-festive" : "theme-solemn";
 
   // 获取所有事件列表
   const getAllEvents = () => {
-    return JSON.parse(localStorage.getItem('giftlist_events') || '[]');
+    return JSON.parse(localStorage.getItem("giftlist_events") || "[]");
+  };
+
+  // 模态框辅助函数
+  const showModal = (
+    title: string,
+    message: string,
+    type: "confirm" | "alert" = "alert",
+    onConfirm?: () => void,
+    onCancel?: () => void
+  ) => {
+    setModal({ isOpen: true, title, message, type, onConfirm, onCancel });
+  };
+
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void
+  ) => {
+    showModal(title, message, "confirm", onConfirm, onCancel);
+  };
+
+  const showAlert = (title: string, message: string) => {
+    showModal(title, message, "alert");
+  };
+
+  const showPrompt = (
+    title: string,
+    message: string,
+    defaultValue: string,
+    onConfirm: (value: string) => void,
+    onCancel?: () => void
+  ) => {
+    setModal({
+      isOpen: true,
+      title,
+      message,
+      type: "prompt",
+      onConfirm: () => {
+        const input = document.getElementById(
+          "prompt-input"
+        ) as HTMLInputElement;
+        if (input && onConfirm) onConfirm(input.value);
+      },
+      onCancel,
+      defaultValue,
+    });
   };
 
   // 退出到首页
   const handleLogout = () => {
-    if (confirm('确定要退出吗？当前会话将被清除，下次登录需要重新输入密码。')) {
-      sessionStorage.removeItem('currentEvent');
-      router.replace('/');
-    }
+    showConfirm(
+      "确认退出",
+      "确定要退出吗？当前会话将被清除，返回首页后需要重新选择事件并输入密码。",
+      () => {
+        sessionStorage.removeItem("currentEvent");
+        router.replace("/");
+      }
+    );
   };
 
   // 切换到其他事件
   const handleSwitchEvent = () => {
     const allEvents = getAllEvents();
     if (allEvents.length <= 1) {
-      alert('当前只有一个事件，无法切换。如需创建新事件，请先退出后在首页操作。');
+      showAlert(
+        "无法切换",
+        "当前只有一个事件，无法切换。如需创建新事件，请先退出后在首页操作。"
+      );
       return;
     }
 
     // 弹出选择对话框
-    const eventNames = allEvents.map((e: any) => e.name).join('\n');
-    const selectedName = prompt(`请选择要切换的事件（输入完整名称）:\n\n${eventNames}\n\n当前事件：${event.name}`);
+    const eventNames = allEvents.map((e: any) => e.name).join("\n");
+    showPrompt(
+      "切换事件",
+      `请选择要切换的事件（输入完整名称）:\n\n${eventNames}\n\n当前事件：${event.name}`,
+      "",
+      (selectedName) => {
+        if (!selectedName || selectedName.trim() === "") return;
 
-    if (!selectedName || selectedName.trim() === '') return;
+        const targetEvent = allEvents.find(
+          (e: any) => e.name === selectedName.trim()
+        );
+        if (!targetEvent) {
+          showAlert("错误", "事件名称输入错误，请检查拼写和空格。");
+          return;
+        }
 
-    const targetEvent = allEvents.find((e: any) => e.name === selectedName.trim());
-    if (!targetEvent) {
-      alert('事件名称输入错误，请检查拼写和空格。');
-      return;
-    }
+        if (targetEvent.id === event.id) {
+          showAlert("提示", "当前已在该事件中。");
+          return;
+        }
 
-    if (targetEvent.id === event.id) {
-      alert('当前已在该事件中。');
-      return;
-    }
+        // 验证密码
+        showPrompt(
+          "密码验证",
+          `请输入 "${targetEvent.name}" 的管理密码：`,
+          "",
+          (pwd) => {
+            if (!pwd) return;
 
-    // 验证密码
-    const pwd = prompt(`请输入 "${targetEvent.name}" 的管理密码：`);
-    if (!pwd) return;
+            // 验证密码
+            const hash = CryptoService.hash(pwd);
+            if (hash !== targetEvent.passwordHash) {
+              showAlert("错误", "密码错误！");
+              return;
+            }
 
-    // 验证密码
-    const hash = CryptoService.hash(pwd);
-    if (hash !== targetEvent.passwordHash) {
-      alert('密码错误！');
-      return;
-    }
+            // 更新会话
+            sessionStorage.setItem(
+              "currentEvent",
+              JSON.stringify({
+                event: targetEvent,
+                password: pwd,
+                timestamp: Date.now(),
+              })
+            );
 
-    // 更新会话
-    sessionStorage.setItem('currentEvent', JSON.stringify({
-      event: targetEvent,
-      password: pwd,
-      timestamp: Date.now()
-    }));
-
-    // 重新加载页面
-    window.location.reload();
+            // 重新加载页面
+            window.location.reload();
+          }
+        );
+      }
+    );
   };
 
   // 返回首页（清除会话）
   const handleGoHome = () => {
-    if (confirm('返回首页将清除当前会话，需要重新登录。确定吗？')) {
-      sessionStorage.removeItem('currentEvent');
-      router.replace('/');
-    }
+    showConfirm(
+      "返回首页",
+      "返回首页将清除当前会话，需要重新选择事件并输入密码。确定吗？",
+      () => {
+        sessionStorage.removeItem("currentEvent");
+        router.replace("/");
+      }
+    );
   };
 
   return (
     <div className={`min-h-screen bg-gray-50 ${themeClass}`}>
       <div className="max-w-7xl mx-auto p-4 space-y-4">
-
         {/* 🔥 新增：导航控制栏 */}
         <div className="card themed-bg-light p-3 no-print">
           <div className="flex justify-between items-center flex-wrap gap-2">
             {/* 当前事件信息 */}
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="font-bold themed-text text-sm">当前：</span>
-              <span className="text-sm truncate" title={event.name}>{event.name}</span>
+              <span className="text-sm truncate" title={event.name}>
+                {event.name}
+              </span>
             </div>
 
             {/* 操作按钮组 */}
@@ -311,23 +412,20 @@ export default function MainPage() {
               {getAllEvents().length > 1 && (
                 <button
                   onClick={handleSwitchEvent}
-                  className="px-3 py-1 themed-button-secondary rounded text-sm hover-lift"
-                >
+                  className="px-3 py-1 themed-button-secondary rounded text-sm hover-lift">
                   切换事件
                 </button>
               )}
 
               <button
                 onClick={handleGoHome}
-                className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 hover-lift"
-              >
+                className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 hover-lift">
                 返回首页
               </button>
 
               <button
                 onClick={handleLogout}
-                className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 hover-lift"
-              >
+                className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 hover-lift">
                 退出
               </button>
             </div>
@@ -343,10 +441,17 @@ export default function MainPage() {
                 {(() => {
                   const formatEventTime = (dt: string) => {
                     const date = new Date(dt);
-                    const pad = (num: number) => num.toString().padStart(2, '0');
-                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                    const pad = (num: number) =>
+                      num.toString().padStart(2, "0");
+                    return `${date.getFullYear()}-${pad(
+                      date.getMonth() + 1
+                    )}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(
+                      date.getMinutes()
+                    )}`;
                   };
-                  return `${formatEventTime(event.startDateTime)} ~ ${formatEventTime(event.endDateTime)}`;
+                  return `${formatEventTime(
+                    event.startDateTime
+                  )} ~ ${formatEventTime(event.endDateTime)}`;
                 })()}
                 {event.recorder && ` | 记账人: ${event.recorder}`}
               </p>
@@ -354,35 +459,35 @@ export default function MainPage() {
             <div className="flex gap-2 flex-wrap no-print">
               <button
                 onClick={exportPDF}
-                className="themed-button-primary px-4 py-2 rounded-lg hover-lift"
-              >
+                className="themed-button-primary px-4 py-2 rounded-lg hover-lift">
                 打印/PDF
               </button>
               <button
                 onClick={exportExcel}
-                className="themed-button-secondary px-4 py-2 rounded-lg hover-lift"
-              >
+                className="themed-button-secondary px-4 py-2 rounded-lg hover-lift">
                 导出Excel
               </button>
               <button
                 onClick={openGuestScreen}
-                className="themed-button-secondary px-4 py-2 rounded-lg hover-lift"
-              >
+                className="themed-button-secondary px-4 py-2 rounded-lg hover-lift">
                 开启副屏
               </button>
             </div>
           </div>
         </div>
 
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 左侧：录入表单 */}
           <div className="lg:col-span-1">
             <div className="card p-6">
-              <h2 className="text-2xl font-bold mb-4 text-center border-b pb-2 themed-header">礼金录入</h2>
+              <h2 className="text-2xl font-bold mb-4 text-center border-b pb-2 themed-header">
+                礼金录入
+              </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    姓名
+                  </label>
                   <input
                     id="name-input"
                     required
@@ -397,7 +502,9 @@ export default function MainPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">金额</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    金额
+                  </label>
                   <input
                     required
                     type="number"
@@ -415,13 +522,14 @@ export default function MainPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">收款类型：</label>
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    收款类型：
+                  </label>
                   <div className="flex flex-wrap gap-x-3 gap-y-2">
-                    {['现金', '微信', '支付宝', '其他'].map((type) => (
+                    {["现金", "微信", "支付宝", "其他"].map((type) => (
                       <label
                         key={type}
-                        className="flex items-center space-x-2 cursor-pointer"
-                      >
+                        className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="radio"
                           name="type"
@@ -442,7 +550,9 @@ export default function MainPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    备注
+                  </label>
                   <input
                     value={formData.remark}
                     onChange={(e) =>
@@ -456,9 +566,8 @@ export default function MainPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full themed-button-primary p-3 rounded-lg font-bold text-lg hover-lift"
-                >
-                  {loading ? '录入中...' : '确认录入'}
+                  className="w-full themed-button-primary p-3 rounded-lg font-bold text-lg hover-lift">
+                  {loading ? "录入中..." : "确认录入"}
                 </button>
               </form>
 
@@ -466,7 +575,9 @@ export default function MainPage() {
               <div className="mt-4 pt-4 border-t themed-border grid grid-cols-2 gap-2 text-xs">
                 <div className="flex justify-between p-2 rounded bg-gray-50 dark:bg-gray-800/30 border themed-border">
                   <span className="text-gray-500">总金额</span>
-                  <span className="font-bold themed-text">{Utils.formatCurrency(totalAmount)}</span>
+                  <span className="font-bold themed-text">
+                    {Utils.formatCurrency(totalAmount)}
+                  </span>
                 </div>
                 <div className="flex justify-between p-2 rounded bg-gray-50 dark:bg-gray-800/30 border themed-border">
                   <span className="text-gray-500">总人数</span>
@@ -484,22 +595,30 @@ export default function MainPage() {
                 <div className="flex items-center gap-3 font-bold themed-text">
                   <span>本页: {Utils.formatCurrency(pageSubtotal)}</span>
                   <span className="text-gray-400">|</span>
-                  <span>人数: {displayGifts.filter(g => g.data && !g.data.abolished).length}</span>
+                  <span>
+                    人数:{" "}
+                    {
+                      displayGifts.filter((g) => g.data && !g.data.abolished)
+                        .length
+                    }
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="themed-button-primary w-7 h-7 rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-opacity-90"
-                  >
+                    className="themed-button-primary w-7 h-7 rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-opacity-90">
                     ←
                   </button>
-                  <span className="font-bold text-gray-700 px-1">{currentPage}/{totalPages}</span>
+                  <span className="font-bold text-gray-700 px-1">
+                    {currentPage}/{totalPages}
+                  </span>
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
                     disabled={currentPage === totalPages}
-                    className="themed-button-primary w-7 h-7 rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-opacity-90"
-                  >
+                    className="themed-button-primary w-7 h-7 rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-opacity-90">
                     →
                   </button>
                 </div>
@@ -535,7 +654,11 @@ export default function MainPage() {
                     const hasData = gift && gift.data && !gift.data.abolished;
                     return (
                       <div key={idx} className="book-cell type-cell">
-                        {hasData ? gift.data!.type : <span className="text-gray-300">+</span>}
+                        {hasData ? (
+                          gift.data!.type
+                        ) : (
+                          <span className="text-gray-300">+</span>
+                        )}
                       </div>
                     );
                   })}
@@ -552,21 +675,94 @@ export default function MainPage() {
                           <div className="amount-chinese">
                             {Utils.amountToChinese(gift.data!.amount)}
                           </div>
-                        ) : <span className="text-gray-300">+</span>}
+                        ) : (
+                          <span className="text-gray-300">+</span>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
-
-              {displayGifts.length === 0 && (
-                <div className="text-center py-12 text-gray-400">
-                  暂无记录，请在左侧录入
-                </div>
-              )}
             </div>
           </div>
         </div>
+
+        {/* 模态框 */}
+        {modal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+              {/* 标题栏 */}
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">
+                  {modal.type === "confirm"
+                    ? "❓"
+                    : modal.type === "prompt"
+                    ? "📝"
+                    : "🔔"}
+                </span>
+                <h3 className="text-xl font-bold text-gray-800">
+                  {modal.title}
+                </h3>
+              </div>
+
+              {/* 消息内容 */}
+              <div className="mb-4 text-gray-600 whitespace-pre-line">
+                {modal.message}
+              </div>
+
+              {/* 输入框（仅 prompt 类型） */}
+              {modal.type === "prompt" && (
+                <input
+                  id="prompt-input"
+                  type="text"
+                  defaultValue={modal.defaultValue || ""}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none mb-4"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && modal.onConfirm) {
+                      modal.onConfirm();
+                      setModal({ ...modal, isOpen: false });
+                    } else if (e.key === "Escape") {
+                      modal.onCancel?.();
+                      setModal({ ...modal, isOpen: false });
+                    }
+                  }}
+                />
+              )}
+
+              {/* 操作按钮 */}
+              <div className="flex gap-3 justify-end">
+                {modal.type === "confirm" && (
+                  <button
+                    onClick={() => {
+                      modal.onCancel?.();
+                      setModal({ ...modal, isOpen: false });
+                    }}
+                    className="px-4 py-2 rounded-lg font-semibold bg-gray-500 hover:bg-gray-600 text-white transition-all transform hover:scale-105 active:scale-95">
+                    取消
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (modal.type === "confirm" || modal.type === "prompt") {
+                      modal.onConfirm?.();
+                    } else {
+                      modal.onCancel?.();
+                    }
+                    setModal({ ...modal, isOpen: false });
+                  }}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95 ${
+                    modal.type === "confirm"
+                      ? "bg-blue-500 hover:bg-blue-600 text-white"
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
+                  }`}>
+                  {modal.type === "confirm" ? "确定" : "确定"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
