@@ -7,14 +7,21 @@
 ### GitHub Pages (免费)
 [![Deploy to GitHub Pages](https://github.com/wu529778790/libu.shenzjd.com/actions/workflows/deploy-to-github-pages.yml/badge.svg)](https://github.com/wu529778790/libu.shenzjd.com/actions/workflows/deploy-to-github-pages.yml)
 
-1. **Fork 这个仓库**
-2. **启用 GitHub Pages** (Settings → Pages → 选择 main 分支)
-3. **推送代码**，Actions 会自动部署
+1. Fork 仓库
+2. 启用 GitHub Pages (Settings → Pages)
+3. 推送代码，自动部署
 
 ### Vercel (推荐)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 
-**点击上面的按钮** → 导入仓库 → 自动部署
+点击按钮 → 导入仓库 → 自动部署
+
+## ⚡ 快速体验
+
+首次访问自动创建演示数据：
+- 事件: 张三李四婚礼
+- 密码: **123456** (已预填)
+- 礼金: 6条数据（888, 666, 1000, 520, 1888, 666）
 
 ## ✨ 核心特性
 
