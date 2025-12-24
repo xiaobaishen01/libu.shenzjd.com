@@ -8,7 +8,7 @@
 
 # Next.js
 /.next/
-/out/
+# /out/  # 注释掉，因为 GitHub Actions 需要使用 out 目录进行部署
 
 # Production
 /build
