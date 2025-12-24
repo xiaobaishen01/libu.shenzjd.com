@@ -18,6 +18,7 @@ interface SyncData {
 
 export default function GuestScreen() {
   const [data, setData] = useState<SyncData | null>(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
 
   useEffect(() => {
     // 监听 localStorage 变化
@@ -27,6 +28,8 @@ export default function GuestScreen() {
         try {
           const parsed = JSON.parse(syncData) as SyncData;
           setData(parsed);
+          // Update the last update time when data changes
+          setLastUpdateTime(new Date());
         } catch (e) {
           console.error("解析同步数据失败:", e);
         }
@@ -77,11 +80,12 @@ export default function GuestScreen() {
           <div className="gift-book-columns">
             {Array.from({ length: 12 }).map((_, idx) => {
               const gift = data.gifts[idx];
+              const isLatest = idx === data.gifts.length - 1 && gift;
 
               return (
                 <div key={idx} className="gift-book-column" data-col-index={idx}>
                   {/* 姓名区域 */}
-                  <div className="book-cell name-cell column-top">
+                  <div className={`book-cell name-cell column-top ${isLatest ? 'bg-yellow-100' : ''}`}>
                     {gift ? (
                       <div className="name">
                         {gift.name.length === 2
@@ -94,7 +98,7 @@ export default function GuestScreen() {
                   </div>
 
                   {/* 金额区域 */}
-                  <div className="book-cell amount-cell column-bottom">
+                  <div className={`book-cell amount-cell column-bottom ${isLatest ? 'bg-yellow-100' : ''}`}>
                     {gift ? (
                       <div className="amount-chinese">
                         {Utils.amountToChinese(gift.amount)}
@@ -107,6 +111,26 @@ export default function GuestScreen() {
               );
             })}
           </div>
+        </div>
+
+        {/* 统计信息 */}
+        <div className="card p-4 mt-4 grid grid-cols-2 gap-4 text-center">
+          <div>
+            <div className="text-sm text-gray-600">最新记录</div>
+            <div className="text-2xl font-bold themed-text">
+              {data.gifts.length > 0 ? data.gifts[data.gifts.length - 1].name : "-"}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600">最新金额</div>
+            <div className="text-2xl font-bold themed-text">
+              {data.gifts.length > 0 ? `¥${data.gifts[data.gifts.length - 1].amount.toFixed(2)}` : "-"}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center text-xs text-gray-400 mt-4">
+          自动同步中 | 最后更新: {lastUpdateTime.toLocaleTimeString()}
         </div>
       </div>
     </div>
