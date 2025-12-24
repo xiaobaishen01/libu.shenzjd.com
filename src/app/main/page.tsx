@@ -125,9 +125,14 @@ export default function MainPage() {
     setConfirmConfig({
       title: "确认删除",
       message: `确定要删除 ${selectedGift.data.name} 的记录吗？金额：¥${selectedGift.data.amount}`,
-      onConfirm: () => {
-        // 实现删除逻辑
-        closeDetailModal();
+      onConfirm: async () => {
+        // 调用store中的删除方法
+        const success = await actions.deleteGift(selectedGift.record.id);
+        if (success) {
+          closeDetailModal();
+        } else {
+          alert('删除失败，请重试');
+        }
       },
     });
     setShowConfirmModal(true);

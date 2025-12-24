@@ -132,7 +132,7 @@ export const useAppStore = () => {
 
     try {
       setState(prev => ({ ...prev, loading: { ...prev.loading, submitting: true } }));
-      
+
       // 加密礼物数据
       const encrypted = CryptoService.encrypt(giftData, state.currentPassword);
       const record: GiftRecord = {
@@ -149,19 +149,76 @@ export const useAppStore = () => {
 
       // 更新状态
       const newGifts = [...state.gifts, { record, data: giftData }];
-      setState(prev => ({ 
-        ...prev, 
-        gifts: newGifts, 
-        loading: { ...prev.loading, submitting: false } 
+      setState(prev => ({
+        ...prev,
+        gifts: newGifts,
+        loading: { ...prev.loading, submitting: false }
       }));
 
       return true;
     } catch (error) {
       console.error('Failed to add gift:', error);
-      setState(prev => ({ 
-        ...prev, 
-        loading: { ...prev.loading, submitting: false }, 
-        error: '添加礼金记录失败' 
+      setState(prev => ({
+        ...prev,
+        loading: { ...prev.loading, submitting: false },
+        error: '添加礼金记录失败'
+      }));
+      return false;
+    }
+  };
+
+  // 删除礼物记录（标记为作废）
+  const deleteGift = async (giftId: string) => {
+    if (!state.currentEvent || !state.currentPassword) {
+      setState(prev => ({ ...prev, error: '未选择事件或密码' }));
+      return false;
+    }
+
+    try {
+      setState(prev => ({ ...prev, loading: { ...prev.loading, submitting: true } }));
+
+      // 从localStorage加载现有记录
+      const key = `giftlist_gifts_${state.currentEvent.id}`;
+      const existingRecords: GiftRecord[] = JSON.parse(localStorage.getItem(key) || "[]");
+
+      // 查找并修改目标记录（标记为作废而非物理删除）
+      const updatedRecords = existingRecords.map(record => {
+        if (record.id === giftId) {
+          // 解密原数据
+          const decryptedData = CryptoService.decrypt<GiftData>(record.encryptedData, state.currentPassword);
+          // 修改数据标记为作废
+          const updatedData = { ...decryptedData, abolished: true };
+          // 重新加密
+          const encrypted = CryptoService.encrypt(updatedData, state.currentPassword);
+          return { ...record, encryptedData: encrypted };
+        }
+        return record;
+      });
+
+      // 保存回localStorage
+      localStorage.setItem(key, JSON.stringify(updatedRecords));
+
+      // 更新状态
+      const updatedGifts = state.gifts.map(item => {
+        if (item.record.id === giftId) {
+          return { ...item, data: { ...item.data!, abolished: true } };
+        }
+        return item;
+      });
+
+      setState(prev => ({
+        ...prev,
+        gifts: updatedGifts,
+        loading: { ...prev.loading, submitting: false }
+      }));
+
+      return true;
+    } catch (error) {
+      console.error('Failed to delete gift:', error);
+      setState(prev => ({
+        ...prev,
+        loading: { ...prev.loading, submitting: false },
+        error: '删除礼金记录失败'
       }));
       return false;
     }
@@ -188,6 +245,7 @@ export const useAppStore = () => {
       clearSession,
       addEvent,
       addGift,
+      deleteGift,
     },
   };
 };
