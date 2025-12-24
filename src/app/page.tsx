@@ -10,7 +10,7 @@ import { formatDate, formatDateTime } from "@/utils/format";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { events } = useEvents();
+  const { events, loading: eventsLoading } = useEvents();
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showSessionChoice, setShowSessionChoice] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -20,6 +20,9 @@ export default function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // 等待事件加载完成后再做判断
+    if (eventsLoading) return; // 如果事件还在加载，不执行后续逻辑
+
     // 检查当前会话
     const session = sessionStorage.getItem("currentEvent");
     if (session) {
@@ -36,7 +39,7 @@ export default function Home() {
     } else {
       navigate("/setup", { replace: true });
     }
-  }, [navigate, events]);
+  }, [navigate, events, eventsLoading]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,7 +277,7 @@ export default function Home() {
                 <Button
                   variant="secondary"
                   className="flex-1 text-sm p-2 rounded"
-                  onClick={() => navigate("/setup")}
+                  onClick={handleCreateNewEvent}
                 >
                   ✨ 创建新事件
                 </Button>
@@ -288,7 +291,8 @@ export default function Home() {
                       )
                     ) {
                       localStorage.removeItem("giftlist_events");
-                      navigate("/", { replace: true });
+                      // 重新加载页面以更新事件列表
+                      window.location.reload();
                     }
                   }}
                 >
