@@ -3,6 +3,9 @@
 基于 **Next.js 16** 的现代化电子礼簿系统，支持本地存储和 GitHub 云端同步。
 
 ![20251224190930](https://gcore.jsdelivr.net/gh/wu529778790/img.shenzjd.com/blog/20251224190930.png)
+![20251224195304](https://gcore.jsdelivr.net/gh/wu529778790/img.shenzjd.com/blog/20251224195304.png)
+![20251224195354](https://gcore.jsdelivr.net/gh/wu529778790/img.shenzjd.com/blog/20251224195354.png)
+![20251224195416](https://gcore.jsdelivr.net/gh/wu529778790/img.shenzjd.com/blog/20251224195416.png)
 
 ## 🚀 一键部署
 
