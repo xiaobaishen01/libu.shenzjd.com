@@ -34,11 +34,11 @@ export default function Home() {
       return;
     }
 
-    // 没有会话但有事件，需要密码
+    // 没有会话但有事件 → 显示事件管理界面（让用户选择或创建）
     if (storedEvents.length > 0) {
-      // 默认选择第一个事件
-      setSelectedEvent(storedEvents[0]);
       setShowPasswordInput(true);
+      // 不默认选择，让用户自己选择
+      setSelectedEvent(null);
     } else {
       // 没有事件，去创建
       router.replace('/setup');
@@ -173,12 +173,23 @@ export default function Home() {
               </div>
             )}
 
-            <button
-              onClick={handleCreateNewEvent}
-              className="w-full mt-4 text-sm text-gray-600 hover:text-gray-900 underline"
-            >
-              创建新事件
-            </button>
+            <div className="pt-3 border-t themed-border space-y-2">
+              <button
+                onClick={handleCreateNewEvent}
+                className="w-full themed-button-secondary p-2 rounded text-sm hover-lift"
+              >
+                ✨ 创建新事件
+              </button>
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem('currentEvent');
+                  router.replace('/');
+                }}
+                className="w-full bg-gray-500 text-white p-2 rounded text-sm hover:bg-gray-600 hover-lift"
+              >
+                🔄 返回首页重新选择
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -194,9 +205,44 @@ export default function Home() {
             电子礼簿系统
           </h1>
           <p className="text-gray-600 text-center mb-6">
-            请输入密码继续
+            {selectedEvent ? '请输入密码继续' : '请选择事件并输入密码'}
           </p>
 
+          {/* 事件列表（当没有默认选择时） */}
+          {!selectedEvent && events.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                选择要登录的事件
+              </label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {events.map(ev => (
+                  <button
+                    key={ev.id}
+                    onClick={() => {
+                      setSelectedEvent(ev);
+                      setPassword('');
+                      setError('');
+                    }}
+                    className="w-full text-left px-3 py-2 bg-gray-100 hover:bg-blue-50 hover:border-blue-300 border-2 border-transparent rounded transition-all"
+                  >
+                    <div className="font-semibold">{ev.name}</div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {(() => {
+                        const formatEventTime = (dt: string) => {
+                          const date = new Date(dt);
+                          const pad = (num: number) => num.toString().padStart(2, '0');
+                          return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                        };
+                        return `${formatEventTime(ev.startDateTime)} ~ ${formatEventTime(ev.endDateTime)}`;
+                      })()}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 选中事件后的信息 */}
           {selectedEvent && (
             <div className="mb-4 p-3 card text-sm">
               <div className="font-bold text-gray-700">{selectedEvent.name}</div>
@@ -210,6 +256,16 @@ export default function Home() {
                   return `${formatEventTime(selectedEvent.startDateTime)} ~ ${formatEventTime(selectedEvent.endDateTime)}`;
                 })()}
               </div>
+              <button
+                onClick={() => {
+                  setSelectedEvent(null);
+                  setPassword('');
+                  setError('');
+                }}
+                className="mt-2 text-xs text-blue-600 hover:underline"
+              >
+                ← 重新选择事件
+              </button>
             </div>
           )}
 
@@ -245,27 +301,30 @@ export default function Home() {
               {loading ? '登录中...' : '登录'}
             </button>
 
-            {events.length > 1 && (
-              <div className="pt-4 border-t themed-border">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  选择其他事项
-                </label>
-                <select
-                  value={selectedEvent?.id || ''}
-                  onChange={(e) => {
-                    const event = events.find(ev => ev.id === e.target.value);
-                    setSelectedEvent(event);
-                  }}
-                  className="themed-ring"
+            <div className="pt-4 border-t themed-border space-y-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push('/setup')}
+                  className="flex-1 text-sm themed-button-secondary p-2 rounded hover-lift"
                 >
-                  {events.map(ev => (
-                    <option key={ev.id} value={ev.id}>
-                      {ev.name}
-                    </option>
-                  ))}
-                </select>
+                  ✨ 创建新事件
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // 清除所有事件数据（仅清除事件列表，保留礼金数据）
+                    if (confirm('确定要删除所有事件吗？礼金记录会保留但无法访问。')) {
+                      localStorage.removeItem('giftlist_events');
+                      router.replace('/');
+                    }
+                  }}
+                  className="flex-1 text-sm bg-red-500 text-white p-2 rounded hover:bg-red-600 hover-lift"
+                >
+                  🗑️ 清除事件
+                </button>
               </div>
-            )}
+            </div>
           </form>
         </div>
       </div>

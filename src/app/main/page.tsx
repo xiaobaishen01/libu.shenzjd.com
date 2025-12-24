@@ -303,14 +303,41 @@ export default function MainPage() {
     });
   };
 
-  // 退出到首页
+  // 退出
   const handleLogout = () => {
     showConfirm(
-      "确认退出",
-      "确定要退出吗？当前会话将被清除，返回首页后需要重新选择事件并输入密码。",
+      "退出选项",
+      "确定要退出吗？\\n\\n选择【确定】：仅清除当前会话\\n选择【彻底退出】：清除会话并删除所有事件数据",
       () => {
+        // 普通确定 - 仅清除会话
         sessionStorage.removeItem("currentEvent");
         router.replace("/");
+      },
+      () => {
+        // 彻底退出 - 清除所有数据
+        showConfirm(
+          "彻底退出",
+          "确定要删除所有事件和数据吗？此操作不可恢复！",
+          () => {
+            sessionStorage.removeItem("currentEvent");
+            localStorage.removeItem("giftlist_events");
+
+            // 清除所有礼金数据
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+              if (key.startsWith("giftlist_gifts_")) {
+                localStorage.removeItem(key);
+              }
+            });
+
+            router.replace("/");
+          },
+          () => {
+            // 取消彻底退出，回到普通退出
+            sessionStorage.removeItem("currentEvent");
+            router.replace("/");
+          }
+        );
       }
     );
   };
@@ -409,24 +436,10 @@ export default function MainPage() {
 
             {/* 操作按钮组 */}
             <div className="flex gap-2 flex-wrap flex-shrink-0">
-              {getAllEvents().length > 1 && (
-                <button
-                  onClick={handleSwitchEvent}
-                  className="px-3 py-1 themed-button-secondary rounded text-sm hover-lift">
-                  切换事件
-                </button>
-              )}
-
               <button
                 onClick={handleGoHome}
                 className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 hover-lift">
                 返回首页
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 hover-lift">
-                退出
               </button>
             </div>
           </div>
