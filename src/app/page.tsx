@@ -1,77 +1,78 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CryptoService } from "@/lib/crypto";
-import { useEvents } from "@/hooks/useEvents";
-import PageLayout from "@/components/layout/PageLayout";
-import FormLayout from "@/components/layout/FormLayout";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import { formatDate, formatDateTime } from "@/utils/format";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppStore } from '@/store/appStore';
+import { CryptoService } from '@/lib/crypto';
+import PageLayout from '@/components/layout/PageLayout';
+import FormLayout from '@/components/layout/FormLayout';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import EventSelector from '@/components/business/EventSelector';
+import { formatDate, formatDateTime } from '@/utils/format';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { events, loading: eventsLoading } = useEvents();
+  const { state, actions } = useAppStore();
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showSessionChoice, setShowSessionChoice] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [currentSessionEvent, setCurrentSessionEvent] = useState<any>(null);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
+  // 初始化时检查会话状态
   useEffect(() => {
-    // 等待事件加载完成后再做判断
-    if (eventsLoading) return; // 如果事件还在加载，不执行后续逻辑
+    // 等待事件加载完成
+    if (state.loading.events) {
+      return; // 如果事件还在加载，不执行后续逻辑
+    }
 
     // 检查当前会话
-    const session = sessionStorage.getItem("currentEvent");
+    const session = sessionStorage.getItem('currentEvent');
     if (session) {
-      const { event: currentEvent } = JSON.parse(session);
-      setShowSessionChoice(true);
-      setCurrentSessionEvent(currentEvent);
-      return;
+      try {
+        const { event: currentEvent } = JSON.parse(session);
+        setShowSessionChoice(true);
+        setCurrentSessionEvent(currentEvent);
+        return;
+      } catch (e) {
+        console.error('Failed to parse session:', e);
+      }
     }
 
     // 没有会话但有事件 → 显示事件管理界面，并默认选中第一个事件
-    if (events.length > 0) {
+    if (state.events.length > 0) {
       setShowPasswordInput(true);
-      setSelectedEvent(events[0]); // 默认选中第一个事件
+      setSelectedEvent(state.events[0]); // 默认选中第一个事件
     } else {
-      navigate("/setup", { replace: true });
+      navigate('/setup', { replace: true });
     }
-  }, [navigate, events, eventsLoading]);
+  }, [state.events, state.loading.events, navigate]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent || !password) return;
 
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       // 验证密码
       const hash = CryptoService.hash(password);
       if (hash !== selectedEvent.passwordHash) {
-        setError("密码错误！");
+        setError('密码错误！');
         setLoading(false);
         return;
       }
 
       // 保存会话
-      sessionStorage.setItem(
-        "currentEvent",
-        JSON.stringify({
-          event: selectedEvent,
-          password: password,
-          timestamp: Date.now(),
-        })
-      );
+      actions.saveSession(selectedEvent, password);
 
       // 进入主界面
-      navigate("/main", { replace: true });
+      navigate('/main', { replace: true });
     } catch (err) {
       console.error(err);
-      setError("登录失败: " + err);
+      setError('登录失败: ' + err);
     } finally {
       setLoading(false);
     }
@@ -79,15 +80,15 @@ export default function Home() {
 
   // 处理继续使用当前会话
   const handleContinueSession = () => {
-    navigate("/main");
+    navigate('/main');
   };
 
   // 处理切换到其他事件
   const handleSwitchFromSession = () => {
-    sessionStorage.removeItem("currentEvent");
+    actions.clearSession();
     setShowSessionChoice(false);
-    if (events.length > 0) {
-      setSelectedEvent(events[0]);
+    if (state.events.length > 0) {
+      setSelectedEvent(state.events[0]);
       setShowPasswordInput(true);
     }
   };
@@ -101,7 +102,7 @@ export default function Home() {
 
   // 处理创建新事件
   const handleCreateNewEvent = () => {
-    navigate("/setup");
+    navigate('/setup');
   };
 
   // 会话选择界面
@@ -125,29 +126,29 @@ export default function Home() {
           </div>
 
           <div className="space-y-3">
-            <Button 
-              variant="primary" 
-              className="w-full p-3 rounded-lg font-bold" 
+            <Button
+              variant="primary"
+              className="w-full p-3 rounded-lg font-bold"
               onClick={handleContinueSession}
             >
               继续使用当前事件
             </Button>
 
-            <Button 
-              variant="secondary" 
-              className="w-full p-3 rounded-lg font-bold" 
+            <Button
+              variant="secondary"
+              className="w-full p-3 rounded-lg font-bold"
               onClick={handleSwitchFromSession}
             >
               切换到其他事件（需重新输入密码）
             </Button>
 
-            {events.length > 1 && (
+            {state.events.length > 1 && (
               <div className="pt-3 border-t themed-border">
                 <p className="text-sm text-gray-600 mb-2">
                   快速切换（需重新输入密码）：
                 </p>
                 <div className="space-y-2">
-                  {events.map(
+                  {state.events.map(
                     (ev: any) =>
                       ev.id !== currentSessionEvent?.id && (
                         <Button
@@ -176,8 +177,8 @@ export default function Home() {
                 variant="danger"
                 className="w-full p-2 rounded text-sm"
                 onClick={() => {
-                  sessionStorage.removeItem("currentEvent");
-                  navigate("/", { replace: true });
+                  actions.clearSession();
+                  navigate('/', { replace: true });
                 }}
               >
                 🔄 返回首页重新选择
@@ -192,40 +193,28 @@ export default function Home() {
   // 密码输入界面
   if (showPasswordInput) {
     return (
-      <PageLayout title="电子礼簿系统" subtitle={selectedEvent ? "请输入密码继续" : "请选择事件并输入密码"}>
+      <PageLayout 
+        title="电子礼簿系统" 
+        subtitle={selectedEvent ? "请输入密码继续" : "请选择事件并输入密码"}
+      >
         <FormLayout>
           {/* 事件列表（当没有默认选择时） */}
-          {!selectedEvent && events.length > 0 && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                选择要登录的事件
-              </label>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {events.map((ev) => (
-                  <Button
-                    key={ev.id}
-                    variant="secondary"
-                    className="w-full text-left px-3 py-2 !bg-gray-100 !text-gray-800 !border-transparent hover:!bg-blue-50 hover:!border-blue-300 !text-left !justify-start"
-                    onClick={() => {
-                      setSelectedEvent(ev);
-                      setError("");
-                    }}
-                  >
-                    <div className="font-semibold">{ev.name}</div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      {`${formatDate(
-                        ev.startDateTime
-                      )} ~ ${formatDate(ev.endDateTime)}`}
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </div>
+          {!selectedEvent && state.events.length > 0 && (
+            <EventSelector 
+              events={state.events}
+              onSelect={(event) => {
+                setSelectedEvent(event);
+                setError('');
+              }}
+              onCreateNew={handleCreateNewEvent}
+              title="选择活动"
+              subtitle="请选择要管理的活动"
+            />
           )}
 
           {/* 选中事件后的信息 */}
           {selectedEvent && (
-            <div className="mb-4 p-3 card text-sm">
+            <div className="mb-4 p-3 themed-ring rounded-lg text-sm">
               <div className="font-bold text-gray-700">
                 {selectedEvent.name}
               </div>
@@ -239,7 +228,7 @@ export default function Home() {
                 className="mt-2 text-xs !p-1 !h-auto"
                 onClick={() => {
                   setSelectedEvent(null);
-                  setError("");
+                  setError('');
                 }}
               >
                 ← 重新选择事件
@@ -255,7 +244,7 @@ export default function Home() {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setError("");
+                  setError('');
                 }}
                 placeholder={selectedEvent ? "默认可能是 123456" : "请输入密码"}
                 error={error}
@@ -290,7 +279,7 @@ export default function Home() {
                         "确定要删除所有事件吗？礼金记录会保留但无法访问。"
                       )
                     ) {
-                      localStorage.removeItem("giftlist_events");
+                      localStorage.removeItem('giftlist_events');
                       // 重新加载页面以更新事件列表
                       window.location.reload();
                     }
@@ -306,6 +295,7 @@ export default function Home() {
     );
   }
 
+  // 加载状态
   return (
     <PageLayout title="电子礼簿系统" subtitle="正在初始化...">
       <div className="text-center fade-in-slow">
