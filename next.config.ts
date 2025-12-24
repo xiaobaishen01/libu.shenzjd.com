@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
   // 配置输出目录
   distDir: isExport ? 'out' : '.next',
 
+  // 压缩和优化
+  compress: true,
+
+  // 移除 X-Powered-By 头
+  poweredByHeader: false,
+
+  // 生成 ETags
+  generateEtags: true,
+
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb'

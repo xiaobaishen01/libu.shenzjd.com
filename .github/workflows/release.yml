@@ -39,6 +39,7 @@ jobs:
         run: pnpm next build
         env:
           NEXT_PUBLIC_IS_EXPORT: 'true'
+          NEXT_TELEMETRY_DISABLED: '1'
 
       - name: Create release package
         run: |
@@ -49,10 +50,9 @@ jobs:
           echo "📦 复制构建文件..."
           cp -r out release-package/
 
-          # 复制配置文件
+          # 复制配置文件（只复制必要的）
           echo "📝 复制配置文件..."
           cp package.json release-package/ 2>/dev/null || true
-          cp pnpm-lock.yaml release-package/ 2>/dev/null || true
           cp README.md release-package/ 2>/dev/null || true
           cp .env.example release-package/ 2>/dev/null || true
 
@@ -132,10 +132,15 @@ jobs:
           如遇问题，请查看控制台错误信息或提交 Issue
           EOF
 
-          # 压缩打包
+          # 压缩打包（使用最优压缩率）
           echo "🗜️ 压缩打包中..."
           tar -czf release-package.tar.gz -C release-package .
+
+          # 显示打包结果
           echo "✅ 打包完成: release-package.tar.gz"
+          ls -lh release-package.tar.gz
+          echo "📦 包含内容:"
+          tar -tzf release-package.tar.gz | head -20
 
       - name: Get or Create Tag
         id: get_tag
