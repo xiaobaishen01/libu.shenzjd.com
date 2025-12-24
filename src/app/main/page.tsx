@@ -255,6 +255,22 @@ export default function MainPage() {
           </div>
         </div>
 
+        {/* 全局统计汇总 */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="card p-3 text-center">
+            <div className="text-xs text-gray-500">总金额</div>
+            <div className="text-xl font-bold themed-text">{Utils.formatCurrency(totalAmount)}</div>
+          </div>
+          <div className="card p-3 text-center">
+            <div className="text-xs text-gray-500">总人数</div>
+            <div className="text-xl font-bold themed-text">{totalGivers}</div>
+          </div>
+          <div className="card p-3 text-center">
+            <div className="text-xs text-gray-500">当前页</div>
+            <div className="text-xl font-bold themed-text">{currentPage}/{totalPages}</div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 左侧：录入表单 */}
           <div className="lg:col-span-1">
@@ -342,19 +358,19 @@ export default function MainPage() {
                 </button>
               </form>
 
-              {/* 统计 */}
-              <div className="mt-6 pt-6 border-t themed-border space-y-2">
-                <div className="text-sm text-gray-600">
-                  <span className="font-bold">本页小计:</span>{' '}
-                  <span className="text-xl font-bold themed-text">{Utils.formatCurrency(pageSubtotal)}</span>
+              {/* 快捷统计卡片 */}
+              <div className="mt-6 pt-6 border-t themed-border grid grid-cols-3 gap-2">
+                <div className="text-center p-2 rounded bg-gray-50 dark:bg-gray-800/50 border themed-border">
+                  <div className="text-xs text-gray-500">本页小计</div>
+                  <div className="text-sm font-bold themed-text truncate">{Utils.formatCurrency(pageSubtotal)}</div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-bold">总金额:</span>{' '}
-                  <span className="text-xl font-bold themed-text">{Utils.formatCurrency(totalAmount)}</span>
+                <div className="text-center p-2 rounded bg-gray-50 dark:bg-gray-800/50 border themed-border">
+                  <div className="text-xs text-gray-500">总金额</div>
+                  <div className="text-sm font-bold themed-text truncate">{Utils.formatCurrency(totalAmount)}</div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-bold">总人数:</span>{' '}
-                  <span className="text-xl font-bold themed-text">{totalGivers}</span>
+                <div className="text-center p-2 rounded bg-gray-50 dark:bg-gray-800/50 border themed-border">
+                  <div className="text-xs text-gray-500">总人数</div>
+                  <div className="text-sm font-bold themed-text">{totalGivers}</div>
                 </div>
               </div>
             </div>
@@ -363,20 +379,18 @@ export default function MainPage() {
           {/* 右侧：礼簿展示 */}
           <div className="lg:col-span-2">
             <div className="gift-book-frame print-area">
-              {/* 页码导航 */}
+              {/* 页码导航 + 简要统计 */}
               <div className="flex justify-between items-center mb-4 pb-4 border-b themed-border no-print">
-                <div className="flex items-center flex-wrap gap-x-4">
-                  <div>
-                    <span className="font-bold text-md">本页小计:</span>{' '}
-                    <span className="text-xl font-bold themed-text">{Utils.formatCurrency(pageSubtotal)}</span>
-                  </div>
-                  <div>
-                    <span className="font-bold text-md">总金额:</span>{' '}
-                    <span className="text-xl font-bold themed-text">{Utils.formatCurrency(totalAmount)}</span>
-                  </div>
-                  <div>
-                    <span className="font-bold text-md">总人数:</span>{' '}
-                    <span className="text-xl font-bold themed-text">{totalGivers}</span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-bold text-gray-600">本页:</span>
+                    <span className="font-bold themed-text">{Utils.formatCurrency(pageSubtotal)}</span>
+                    <span className="text-gray-400">|</span>
+                    <span className="font-bold text-gray-600">总计:</span>
+                    <span className="font-bold themed-text">{Utils.formatCurrency(totalAmount)}</span>
+                    <span className="text-gray-400">|</span>
+                    <span className="font-bold text-gray-600">人数:</span>
+                    <span className="font-bold themed-text">{totalGivers}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 text-lg">
