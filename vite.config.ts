@@ -1,20 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), viteSingleFile()],
   base: "./",
   build: {
     outDir: "dist",
-    assetsDir: "assets",
+    assetsDir: "",
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-          crypto: ["crypto-js"],
-          xlsx: ["xlsx"],
-        },
+        format: "iife",
       },
     },
   },

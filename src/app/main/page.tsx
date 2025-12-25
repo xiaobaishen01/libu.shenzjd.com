@@ -242,7 +242,10 @@ export default function MainPage() {
 
   // 打开副屏
   const openGuestScreen = () => {
-    window.open("/guest-screen", "_blank", "width=1200,height=800");
+    // 获取当前页面的完整路径，替换 hash 部分为副屏路径
+    const currentUrl = window.location.href;
+    const baseUrl = currentUrl.split('#')[0];
+    window.open(`${baseUrl}#/guest-screen`, "_blank", "width=1200,height=800");
   };
 
 

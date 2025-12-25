@@ -18,7 +18,7 @@ interface SyncData {
 
 export default function GuestScreen() {
   const [data, setData] = useState<SyncData | null>(null);
-  const [setLastUpdateTime] = useState<Date>(new Date());
+  const [, setLastUpdateTime] = useState<Date>(new Date());
 
   useEffect(() => {
     // 监听 localStorage 变化

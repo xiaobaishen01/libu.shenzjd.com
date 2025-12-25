@@ -185,11 +185,11 @@ export const useAppStore = () => {
       const updatedRecords = existingRecords.map(record => {
         if (record.id === giftId) {
           // 解密原数据
-          const decryptedData = CryptoService.decrypt<GiftData>(record.encryptedData, state.currentPassword);
+          const decryptedData = CryptoService.decrypt<GiftData>(record.encryptedData, state.currentPassword!);
           // 修改数据标记为作废
           const updatedData = { ...decryptedData, abolished: true };
           // 重新加密
-          const encrypted = CryptoService.encrypt(updatedData, state.currentPassword);
+          const encrypted = CryptoService.encrypt(updatedData, state.currentPassword!);
           return { ...record, encryptedData: encrypted };
         }
         return record;
@@ -242,7 +242,7 @@ export const useAppStore = () => {
       const updatedRecords = existingRecords.map(record => {
         if (record.id === giftId) {
           // 重新加密更新后的数据
-          const encrypted = CryptoService.encrypt(updatedData, state.currentPassword);
+          const encrypted = CryptoService.encrypt(updatedData, state.currentPassword!);
           return { ...record, encryptedData: encrypted };
         }
         return record;
