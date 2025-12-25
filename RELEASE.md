@@ -14,7 +14,7 @@ git push origin v1.0.0
 # 2. GitHub Actions 自动完成：
 #    - 构建项目 (pnpm build)
 #    - 创建 Release
-#    - 上传 index.html + VERSION.txt
+#    - 上传 index.html
 ```
 
 ### 方式2: 手动触发
@@ -26,14 +26,13 @@ git push origin v1.0.0
 
 ## 📦 发布内容
 
-Release 包含：
+Release 只包含：
 
 ```
-├── index.html          # 单文件应用（298KB）
-└── VERSION.txt         # 版本信息
+index.html          # 单文件应用（298KB）
 ```
 
-**✨ 特性**：无需打包，直接上传单个 HTML 文件！
+**✨ 特性**：只有一个文件，下载即用！
 
 ## 🎯 使用方式
 
@@ -93,4 +92,4 @@ A: 可以，使用 `v1.0.0-beta` 等格式
 
 - 发布前先本地测试 `pnpm build`
 - 使用语义化版本号（v1.0.0, v1.0.1, v1.1.0）
-- ✨ 直接下载 index.html 即可使用，无需解压！
+- ✨ 只有一个文件，下载即用！

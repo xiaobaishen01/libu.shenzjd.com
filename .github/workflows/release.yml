@@ -40,25 +40,13 @@ jobs:
         env:
           VITE_TELEMETRY_DISABLED: '1'
 
-      - name: Prepare release files
+      - name: Prepare release file
         run: |
           # 复制构建产物
           echo "📦 准备发布文件..."
           cp dist/index.html ./
-
-          # 生成版本信息
-          TAG_NAME="${{ github.ref_name || inputs.tag_name }}"
-          cat > VERSION.txt << EOF
-          礼簿系统版本: $TAG_NAME
-          构建时间: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          Commit: ${{ github.sha }}
-          仓库: ${{ github.repository }}
-          构建者: ${{ github.actor }}
-          EOF
-
-          # 显示结果
-          echo "✅ 准备完成"
-          ls -lh index.html VERSION.txt
+          echo "✅ 准备完成: index.html"
+          ls -lh index.html
 
       - name: Get or Create Tag
         id: get_tag
@@ -90,7 +78,6 @@ jobs:
 
             ### 📦 包含文件
             - `index.html` - 单文件应用（可直接打开）
-            - `VERSION.txt` - 版本信息
 
             ### 🚀 快速开始（无需服务器！）
 
@@ -112,11 +99,6 @@ jobs:
             # 或部署到 GitHub Pages
             ```
 
-            ### 📝 构建信息
-            - **Commit**: ${{ github.sha }}
-            - **构建者**: ${{ github.actor }}
-            - **分支**: ${{ github.ref_name }}
-
             ### 🎯 页面路由
             - 首页: `index.html#/`
             - 创建事件: `index.html#/setup`
@@ -128,9 +110,7 @@ jobs:
             - 数据存储: localStorage
             - 加密方式: AES-256
 
-          files: |
-            index.html
-            VERSION.txt
+          files: index.html
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
