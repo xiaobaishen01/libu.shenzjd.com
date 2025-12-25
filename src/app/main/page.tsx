@@ -18,25 +18,25 @@ export default function MainPage() {
   const [selectedGift, setSelectedGift] = useState<any>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     onConfirm: () => {},
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
-    name: '',
-    amount: '',
-    type: '现金' as GiftType,
-    remark: '',
+    name: "",
+    amount: "",
+    type: "现金" as GiftType,
+    remark: "",
   });
-  const [chineseAmount, setChineseAmount] = useState('');
+  const [chineseAmount, setChineseAmount] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
   const [importSuccessMsg, setImportSuccessMsg] = useState<string | null>(null);
 
   // 检查是否有会话，如果没有则返回首页
   useEffect(() => {
     if (!state.currentEvent || !state.currentPassword) {
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }
   }, [state.currentEvent, state.currentPassword, navigate]);
 
@@ -93,11 +93,17 @@ export default function MainPage() {
       const validGifts = state.gifts
         .filter((g) => g.data && !g.data.abolished)
         .map((g) => g.data!)
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        .sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
 
       const syncData = {
         eventName: state.currentEvent.name,
-        theme: state.currentEvent.theme === "festive" ? "theme-festive" : "theme-solemn",
+        theme:
+          state.currentEvent.theme === "festive"
+            ? "theme-festive"
+            : "theme-solemn",
         gifts: validGifts,
       };
 
@@ -110,17 +116,17 @@ export default function MainPage() {
     if (selectedGift && selectedGift.data) {
       setIsEditing(true);
       setEditFormData({
-        name: selectedGift.data.name || '',
-        amount: selectedGift.data.amount.toString() || '',
-        type: selectedGift.data.type || '现金',
-        remark: selectedGift.data.remark || '',
+        name: selectedGift.data.name || "",
+        amount: selectedGift.data.amount.toString() || "",
+        type: selectedGift.data.type || "现金",
+        remark: selectedGift.data.remark || "",
       });
       // 设置初始的大写金额
       const amount = parseFloat(selectedGift.data.amount.toString());
       if (!isNaN(amount)) {
         setChineseAmount(Utils.amountToChinese(amount));
       } else {
-        setChineseAmount('');
+        setChineseAmount("");
       }
     }
   };
@@ -129,12 +135,12 @@ export default function MainPage() {
   const cancelEditing = () => {
     setIsEditing(false);
     setEditFormData({
-      name: '',
-      amount: '',
-      type: '现金',
-      remark: '',
+      name: "",
+      amount: "",
+      type: "现金",
+      remark: "",
     });
-    setChineseAmount('');
+    setChineseAmount("");
   };
 
   // 处理编辑表单中的金额变化
@@ -144,7 +150,7 @@ export default function MainPage() {
     if (!isNaN(num)) {
       setChineseAmount(Utils.amountToChinese(num));
     } else {
-      setChineseAmount('');
+      setChineseAmount("");
     }
   };
 
@@ -154,7 +160,7 @@ export default function MainPage() {
 
     const amount = parseFloat(editFormData.amount);
     if (!editFormData.name.trim() || isNaN(amount) || amount <= 0) {
-      alert('请填写正确的姓名和金额');
+      alert("请填写正确的姓名和金额");
       return;
     }
 
@@ -166,18 +172,21 @@ export default function MainPage() {
       remark: editFormData.remark.trim() || undefined,
     };
 
-    const success = await actions.updateGift(selectedGift.record.id, updatedGiftData);
+    const success = await actions.updateGift(
+      selectedGift.record.id,
+      updatedGiftData
+    );
     if (success) {
       // 更新选中的礼物数据
       setSelectedGift({
         ...selectedGift,
-        data: updatedGiftData
+        data: updatedGiftData,
       });
       setIsEditing(false);
       // 同步数据到副屏
       syncDataToGuestScreen();
     } else {
-      alert('更新失败，请重试');
+      alert("更新失败，请重试");
     }
   };
 
@@ -206,12 +215,12 @@ export default function MainPage() {
     setSelectedGift(null);
     setIsEditing(false); // 确保退出编辑模式
     setEditFormData({
-      name: '',
-      amount: '',
-      type: '现金',
-      remark: '',
+      name: "",
+      amount: "",
+      type: "现金",
+      remark: "",
     });
-    setChineseAmount('');
+    setChineseAmount("");
   };
 
   // 删除记录
@@ -227,7 +236,7 @@ export default function MainPage() {
         if (success) {
           closeDetailModal();
         } else {
-          alert('删除失败，请重试');
+          alert("删除失败，请重试");
         }
       },
     });
@@ -243,7 +252,7 @@ export default function MainPage() {
         .map((g) => g.data!);
 
       if (validGifts.length === 0) {
-        alert('暂无礼金记录可导出');
+        alert("暂无礼金记录可导出");
         return;
       }
 
@@ -254,7 +263,7 @@ export default function MainPage() {
         state.currentEvent!
       );
     } catch (error) {
-      alert('导出Excel失败：' + (error as Error).message);
+      alert("导出Excel失败：" + (error as Error).message);
     }
   };
 
@@ -266,36 +275,42 @@ export default function MainPage() {
       .map((g) => g.data!);
 
     if (validGifts.length === 0) {
-      alert('暂无礼金记录可打印');
+      alert("暂无礼金记录可打印");
       return;
     }
 
     // 打开新窗口进行打印
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      alert('无法打开打印窗口，请检查浏览器设置');
+      alert("无法打开打印窗口，请检查浏览器设置");
       return;
     }
 
     // 判断主题
-    const isFestive = state.currentEvent!.theme === 'festive';
+    const isFestive = state.currentEvent!.theme === "festive";
 
     // 按时间排序
-    const sortedGifts = validGifts.sort((a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    const sortedGifts = validGifts.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
     // 生成礼簿内容HTML
-    const giftColumnsHTML = sortedGifts.map(gift => {
-      const name = gift.name.length === 2 ? `${gift.name[0]}　${gift.name[1]}` : gift.name;
-      const amountChinese = Utils.amountToChinese(gift.amount);
-      return `
+    const giftColumnsHTML = sortedGifts
+      .map((gift) => {
+        const name =
+          gift.name.length === 2
+            ? `${gift.name[0]}　${gift.name[1]}`
+            : gift.name;
+        const amountChinese = Utils.amountToChinese(gift.amount);
+        return `
         <div class="print-gift-column">
           <div class="book-cell name-cell">${name}</div>
           <div class="book-cell amount-cell">${amountChinese}</div>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
 
     // 生成统计信息
     const totalAmount = validGifts.reduce((sum, g) => sum + g.amount, 0);
@@ -303,31 +318,31 @@ export default function MainPage() {
       acc[g.type] = (acc[g.type] || 0) + g.amount;
       return acc;
     }, {} as Record<string, number>);
-    const statsHTML = Object.entries(typeStats).map(([type, amount]) =>
-      `<span>${type}: ¥${amount.toFixed(2)}</span>`
-    ).join('');
+    const statsHTML = Object.entries(typeStats)
+      .map(([type, amount]) => `<span>${type}: ¥${amount.toFixed(2)}</span>`)
+      .join("");
 
     // 根据主题设置颜色
     const themeColors = {
       festive: {
-        primary: '#d9534f',      // 喜事红
-        secondary: '#c9302c',    // 深红
-        border: '#f8d7da',       // 浅红边框
-        text: '#721c24',         // 深红文字
-        bg: '#fff5f5',           // 浅红背景
-        stats: '#d9534f'         // 统计红色
+        primary: "#d9534f", // 喜事红
+        secondary: "#c9302c", // 深红
+        border: "#f8d7da", // 浅红边框
+        text: "#721c24", // 深红文字
+        bg: "#fff5f5", // 浅红背景
+        stats: "#d9534f", // 统计红色
       },
       solemn: {
-        primary: '#343a40',      // 丧事黑
-        secondary: '#495057',    // 深灰
-        border: '#e9ecef',       // 浅灰边框
-        text: '#212529',         // 深黑文字
-        bg: '#f8f9fa',           // 浅灰背景
-        stats: '#495057'         // 统计灰色
-      }
+        primary: "#343a40", // 丧事黑
+        secondary: "#495057", // 深灰
+        border: "#e9ecef", // 浅灰边框
+        text: "#212529", // 深黑文字
+        bg: "#f8f9fa", // 浅灰背景
+        stats: "#495057", // 统计灰色
+      },
     };
 
-    const colors = themeColors[isFestive ? 'festive' : 'solemn'];
+    const colors = themeColors[isFestive ? "festive" : "solemn"];
 
     // 生成打印HTML
     const printHTML = `
@@ -438,7 +453,11 @@ export default function MainPage() {
             border-bottom: 2px solid ${colors.border};
             font-size: 19pt;
             color: ${colors.text};
-            background: ${isFestive ? 'linear-gradient(to bottom, #fff, #fff5f5)' : 'linear-gradient(to bottom, #fff, #f8f9fa)'};
+            background: ${
+              isFestive
+                ? "linear-gradient(to bottom, #fff, #fff5f5)"
+                : "linear-gradient(to bottom, #fff, #f8f9fa)"
+            };
           }
 
           .amount-cell {
@@ -473,8 +492,14 @@ export default function MainPage() {
           <div class="print-header">
             <h1>${state.currentEvent!.name}</h1>
             <div class="info">
-              <span>时间: ${formatDateTime(state.currentEvent!.startDateTime)} ~ ${formatDateTime(state.currentEvent!.endDateTime)}</span>
-              ${state.currentEvent!.recorder ? `<span>记账人: ${state.currentEvent!.recorder}</span>` : ''}
+              <span>时间: ${formatDateTime(
+                state.currentEvent!.startDateTime
+              )} ~ ${formatDateTime(state.currentEvent!.endDateTime)}</span>
+              ${
+                state.currentEvent!.recorder
+                  ? `<span>记账人: ${state.currentEvent!.recorder}</span>`
+                  : ""
+              }
             </div>
             <div class="stats">
               <span>总金额: ¥${totalAmount.toFixed(2)}</span>
@@ -488,7 +513,9 @@ export default function MainPage() {
           </div>
 
           <div class="print-footer">
-            打印时间: ${new Date().toLocaleString('zh-CN')} | 共 ${validGifts.length} 条记录
+            打印时间: ${new Date().toLocaleString("zh-CN")} | 共 ${
+      validGifts.length
+    } 条记录
           </div>
         </div>
 
@@ -513,9 +540,12 @@ export default function MainPage() {
   // 导出备份
   const exportBackup = () => {
     try {
-      BackupService.exportEvent(state.currentEvent!.id, state.currentEvent!.name);
+      BackupService.exportEvent(
+        state.currentEvent!.id,
+        state.currentEvent!.name
+      );
     } catch (error) {
-      alert('导出失败：' + (error as Error).message);
+      alert("导出失败：" + (error as Error).message);
     }
   };
 
@@ -523,9 +553,13 @@ export default function MainPage() {
   const openGuestScreen = () => {
     // 获取当前页面的完整路径，替换 hash 部分为副屏路径
     const currentUrl = window.location.href;
-    const baseUrl = currentUrl.split('#')[0];
+    const baseUrl = currentUrl.split("#")[0];
     // 打开最大化窗口，适合横屏展示
-    window.open(`${baseUrl}#/guest-screen`, "_blank", "width=1920,height=1080,left=0,top=0,fullscreen=yes,menubar=no,toolbar=no,location=no,status=no");
+    window.open(
+      `${baseUrl}#/guest-screen`,
+      "_blank",
+      "width=1920,height=1080,left=0,top=0,fullscreen=yes,menubar=no,toolbar=no,location=no,status=no"
+    );
   };
 
   // 导入备份成功
@@ -548,7 +582,6 @@ export default function MainPage() {
     }, 5000);
   };
 
-
   return (
     <MainLayout theme={state.currentEvent.theme}>
       <div className="space-y-4">
@@ -556,48 +589,35 @@ export default function MainPage() {
         <div className="card themed-bg-light p-4">
           <div className="flex justify-between items-center flex-wrap gap-4">
             <div>
-              <h1 className="text-2xl font-bold themed-header">{state.currentEvent.name}</h1>
+              <h1 className="text-2xl font-bold themed-header">
+                {state.currentEvent.name}
+              </h1>
               <p className="text-sm text-gray-600 mt-1">
-                {formatDateTime(state.currentEvent.startDateTime)} ~ {formatDateTime(state.currentEvent.endDateTime)}
-                {state.currentEvent.recorder && ` | 记账人: ${state.currentEvent.recorder}`}
+                {formatDateTime(state.currentEvent.startDateTime)} ~{" "}
+                {formatDateTime(state.currentEvent.endDateTime)}
+                {state.currentEvent.recorder &&
+                  ` | 记账人: ${state.currentEvent.recorder}`}
               </p>
             </div>
             <div className="flex gap-2 flex-wrap no-print">
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleGoHome}
-              >
+              <Button variant="danger" size="sm" onClick={handleGoHome}>
                 返回首页
               </Button>
-              <Button
-                variant="primary"
-                onClick={exportPDF}
-              >
+              <Button variant="primary" onClick={exportPDF}>
                 打印/PDF
               </Button>
-              <Button
-                variant="secondary"
-                onClick={exportExcel}
-              >
+              <Button variant="secondary" onClick={exportExcel}>
                 导出Excel
               </Button>
-              <Button
-                variant="secondary"
-                onClick={openGuestScreen}
-              >
+              <Button variant="secondary" onClick={openGuestScreen}>
                 开启副屏
               </Button>
-              <Button
-                variant="secondary"
-                onClick={exportBackup}
-              >
+              <Button variant="secondary" onClick={exportBackup}>
                 💾 导出备份
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => setShowImportModal(true)}
-              >
+                onClick={() => setShowImportModal(true)}>
                 📂 导入备份
               </Button>
             </div>
@@ -613,8 +633,7 @@ export default function MainPage() {
             </div>
             <button
               onClick={() => setImportSuccessMsg(null)}
-              className="text-green-600 hover:text-green-800 font-bold"
-            >
+              className="text-green-600 hover:text-green-800 font-bold">
               ×
             </button>
           </div>
@@ -627,9 +646,9 @@ export default function MainPage() {
               <h2 className="text-2xl font-bold mb-4 text-center border-b pb-2 themed-header">
                 礼金录入
               </h2>
-              
-              <GiftEntryForm 
-                onSubmit={handleGiftSubmit} 
+
+              <GiftEntryForm
+                onSubmit={handleGiftSubmit}
                 loading={state.loading.submitting}
               />
 
@@ -670,8 +689,7 @@ export default function MainPage() {
                     variant="primary"
                     className="w-7 h-7 rounded !p-0"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
+                    disabled={currentPage === 1}>
                     ←
                   </Button>
                   <span className="font-bold text-gray-700 px-1">
@@ -683,8 +701,7 @@ export default function MainPage() {
                     onClick={() =>
                       setCurrentPage((p) => Math.min(totalPages, p + 1))
                     }
-                    disabled={currentPage === totalPages}
-                  >
+                    disabled={currentPage === totalPages}>
                     →
                   </Button>
                 </div>
@@ -706,8 +723,7 @@ export default function MainPage() {
                           openDetailModal(gift);
                         }
                       }}
-                      style={{ cursor: hasData ? 'pointer' : 'default' }}
-                    >
+                      style={{ cursor: hasData ? "pointer" : "default" }}>
                       {/* 姓名区域 */}
                       <div className="book-cell name-cell column-top">
                         {hasData ? (
@@ -717,7 +733,9 @@ export default function MainPage() {
                               : gift.data!.name}
                           </div>
                         ) : (
-                          <span className="text-gray-300 print-placeholder">+</span>
+                          <span className="text-gray-300 print-placeholder">
+                            +
+                          </span>
                         )}
                       </div>
 
@@ -728,7 +746,9 @@ export default function MainPage() {
                             {Utils.amountToChinese(gift.data!.amount)}
                           </div>
                         ) : (
-                          <span className="text-gray-300 print-placeholder">+</span>
+                          <span className="text-gray-300 print-placeholder">
+                            +
+                          </span>
                         )}
                       </div>
                     </div>
@@ -755,8 +775,7 @@ export default function MainPage() {
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="danger"
-                  onClick={() => setShowConfirmModal(false)}
-                >
+                  onClick={() => setShowConfirmModal(false)}>
                   取消
                 </Button>
                 <Button
@@ -764,8 +783,7 @@ export default function MainPage() {
                   onClick={() => {
                     confirmConfig.onConfirm();
                     setShowConfirmModal(false);
-                  }}
-                >
+                  }}>
                   确定
                 </Button>
               </div>
@@ -779,7 +797,7 @@ export default function MainPage() {
             <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 animate-scale-in max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4 border-b pb-2">
                 <h3 className="text-xl font-bold themed-header">
-                  {isEditing ? '编辑礼金记录' : '礼金详情'}
+                  {isEditing ? "编辑礼金记录" : "礼金详情"}
                 </h3>
                 <button
                   onClick={() => {
@@ -789,8 +807,7 @@ export default function MainPage() {
                       closeDetailModal();
                     }
                   }}
-                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-                >
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none">
                   ×
                 </button>
               </div>
@@ -801,12 +818,17 @@ export default function MainPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        姓名 *
+                        姓名
                       </label>
                       <input
                         type="text"
                         value={editFormData.name}
-                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            name: e.target.value,
+                          })
+                        }
                         className="w-full p-2 border themed-ring rounded"
                         placeholder="来宾姓名"
                       />
@@ -814,7 +836,7 @@ export default function MainPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        金额 *
+                        金额
                       </label>
                       <input
                         type="number"
@@ -833,28 +855,33 @@ export default function MainPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        收款类型 *
+                        收款类型
                       </label>
                       <div className="grid grid-cols-4 gap-2">
-                        {(['现金', '微信', '支付宝', '其他'] as GiftType[]).map((type) => (
-                          <label
-                            key={type}
-                            className={`flex items-center justify-center p-2 themed-ring rounded-lg cursor-pointer ${
-                              editFormData.type === type ? 'bg-blue-100 border-blue-500' : ''
-                            }`}
-                            onClick={() => setEditFormData({ ...editFormData, type })}
-                          >
-                            <input
-                              type="radio"
-                              name="editType"
-                              value={type}
-                              checked={editFormData.type === type}
-                              onChange={() => {}}
-                              className="sr-only"
-                            />
-                            <span>{type}</span>
-                          </label>
-                        ))}
+                        {(["现金", "微信", "支付宝", "其他"] as GiftType[]).map(
+                          (type) => (
+                            <label
+                              key={type}
+                              className={`flex items-center justify-center p-2 themed-ring rounded-lg cursor-pointer ${
+                                editFormData.type === type
+                                  ? "bg-blue-100 border-blue-500"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                setEditFormData({ ...editFormData, type })
+                              }>
+                              <input
+                                type="radio"
+                                name="editType"
+                                value={type}
+                                checked={editFormData.type === type}
+                                onChange={() => {}}
+                                className="sr-only"
+                              />
+                              <span>{type}</span>
+                            </label>
+                          )
+                        )}
                       </div>
                     </div>
 
@@ -865,7 +892,12 @@ export default function MainPage() {
                       <input
                         type="text"
                         value={editFormData.remark}
-                        onChange={(e) => setEditFormData({ ...editFormData, remark: e.target.value })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            remark: e.target.value,
+                          })
+                        }
                         className="w-full p-2 border themed-ring rounded"
                         placeholder="备注内容（选填）"
                       />
@@ -875,15 +907,13 @@ export default function MainPage() {
                       <Button
                         variant="secondary"
                         className="flex-1"
-                        onClick={cancelEditing}
-                      >
+                        onClick={cancelEditing}>
                         取消
                       </Button>
                       <Button
                         variant="primary"
                         className="flex-1"
-                        onClick={saveEdit}
-                      >
+                        onClick={saveEdit}>
                         保存
                       </Button>
                     </div>
@@ -893,7 +923,9 @@ export default function MainPage() {
                   <div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="font-semibold text-gray-600">姓名：</div>
-                      <div className="font-bold text-lg">{selectedGift.data.name}</div>
+                      <div className="font-bold text-lg">
+                        {selectedGift.data.name}
+                      </div>
 
                       <div className="font-semibold text-gray-600">金额：</div>
                       <div className="font-bold text-lg text-red-600">
@@ -912,14 +944,21 @@ export default function MainPage() {
                       <div className="text-gray-700">
                         {(() => {
                           const date = new Date(selectedGift.data.timestamp);
-                          const pad = (num: number) => num.toString().padStart(2, "0");
-                          return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                          const pad = (num: number) =>
+                            num.toString().padStart(2, "0");
+                          return `${date.getFullYear()}-${pad(
+                            date.getMonth() + 1
+                          )}-${pad(date.getDate())} ${pad(
+                            date.getHours()
+                          )}:${pad(date.getMinutes())}`;
                         })()}
                       </div>
 
                       {selectedGift.data.remark && (
                         <>
-                          <div className="font-semibold text-gray-600">备注：</div>
+                          <div className="font-semibold text-gray-600">
+                            备注：
+                          </div>
                           <div className="col-span-2 text-gray-700 bg-gray-50 p-2 rounded">
                             {selectedGift.data.remark}
                           </div>
@@ -931,15 +970,13 @@ export default function MainPage() {
                       <Button
                         variant="primary"
                         className="flex-1"
-                        onClick={startEditing}
-                      >
+                        onClick={startEditing}>
                         ✏️ 修改
                       </Button>
                       <Button
                         variant="danger"
                         className="flex-1"
-                        onClick={handleDeleteGift}
-                      >
+                        onClick={handleDeleteGift}>
                         🗑️ 删除
                       </Button>
                     </div>
@@ -950,12 +987,12 @@ export default function MainPage() {
           </div>
         )}
 
-      {/* 导入备份模态框 */}
-      <ImportBackupModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onImportSuccess={handleImportSuccess}
-      />
+        {/* 导入备份模态框 */}
+        <ImportBackupModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImportSuccess={handleImportSuccess}
+        />
       </div>
     </MainLayout>
   );

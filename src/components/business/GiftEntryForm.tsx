@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { GiftType } from '@/types';
-import { Utils } from '@/lib/utils';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import React, { useState } from "react";
+import { GiftType } from "@/types";
+import { Utils } from "@/lib/utils";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 interface GiftEntryFormProps {
   onSubmit: (giftData: {
@@ -14,14 +14,17 @@ interface GiftEntryFormProps {
   loading?: boolean;
 }
 
-const GiftEntryForm: React.FC<GiftEntryFormProps> = ({ onSubmit, loading = false }) => {
+const GiftEntryForm: React.FC<GiftEntryFormProps> = ({
+  onSubmit,
+  loading = false,
+}) => {
   const [formData, setFormData] = useState({
-    name: '',
-    amount: '',
-    type: '现金' as GiftType,
-    remark: '',
+    name: "",
+    amount: "",
+    type: "现金" as GiftType,
+    remark: "",
   });
-  const [chineseAmount, setChineseAmount] = useState('');
+  const [chineseAmount, setChineseAmount] = useState("");
 
   const handleAmountChange = (value: string) => {
     setFormData({ ...formData, amount: value });
@@ -29,16 +32,16 @@ const GiftEntryForm: React.FC<GiftEntryFormProps> = ({ onSubmit, loading = false
     if (!isNaN(num)) {
       setChineseAmount(Utils.amountToChinese(num));
     } else {
-      setChineseAmount('');
+      setChineseAmount("");
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const amount = parseFloat(formData.amount);
     if (!formData.name.trim() || isNaN(amount) || amount <= 0) {
-      alert('请填写正确的姓名和金额');
+      alert("请填写正确的姓名和金额");
       return;
     }
 
@@ -51,18 +54,18 @@ const GiftEntryForm: React.FC<GiftEntryFormProps> = ({ onSubmit, loading = false
 
     // 重置表单
     setFormData({
-      name: '',
-      amount: '',
-      type: '现金',
-      remark: '',
+      name: "",
+      amount: "",
+      type: "现金",
+      remark: "",
     });
-    setChineseAmount('');
+    setChineseAmount("");
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
-        label="姓名 *"
+        label="姓名"
         type="text"
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -73,7 +76,7 @@ const GiftEntryForm: React.FC<GiftEntryFormProps> = ({ onSubmit, loading = false
 
       <div>
         <Input
-          label="金额 *"
+          label="金额"
           type="number"
           step="0.01"
           value={formData.amount}
@@ -90,16 +93,15 @@ const GiftEntryForm: React.FC<GiftEntryFormProps> = ({ onSubmit, loading = false
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          收款类型 *
+          收款类型
         </label>
         <div className="grid grid-cols-4 gap-2">
-          {(['现金', '微信', '支付宝', '其他'] as GiftType[]).map((type) => (
+          {(["现金", "微信", "支付宝", "其他"] as GiftType[]).map((type) => (
             <label
               key={type}
               className={`flex items-center justify-center p-2 themed-ring rounded-lg cursor-pointer ${
-                formData.type === type ? 'bg-blue-100 border-blue-500' : ''
-              }`}
-            >
+                formData.type === type ? "bg-blue-100 border-blue-500" : ""
+              }`}>
               <input
                 type="radio"
                 name="type"
@@ -126,8 +128,7 @@ const GiftEntryForm: React.FC<GiftEntryFormProps> = ({ onSubmit, loading = false
         type="submit"
         variant="primary"
         className="w-full p-3 rounded-lg font-bold text-lg"
-        disabled={loading}
-      >
+        disabled={loading}>
         {loading ? "录入中..." : "确认录入"}
       </Button>
     </form>
