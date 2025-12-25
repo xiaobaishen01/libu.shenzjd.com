@@ -1,324 +1,220 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { CryptoService } from "@/lib/crypto";
-import { Utils } from "@/lib/utils";
 import { Event } from "@/types";
-import { GitHubService } from "@/lib/github";
+import PageLayout from "@/components/layout/PageLayout";
+import FormLayout from "@/components/layout/FormLayout";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
-export default function SetupPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+export default function Setup() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "张三李四婚礼之喜（测试）",
-    startDate: Utils.getCurrentDateTime().date,
-    startTime: "18:00",
-    endDate: Utils.getCurrentDateTime().date,
-    endTime: "22:00",
-    password: "123456",
+    name: "张三 & 李四 婚礼", // 默认事件名称
+    startDate: new Date().toISOString().split('T')[0], // 默认为今天
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 默认为一周后
+    password: "123456", // 默认密码
     theme: "festive" as "festive" | "solemn",
-    recorder: "",
-    githubSync: false,
-    githubOwner: "",
-    githubRepo: "",
-    githubToken: "",
+    recorder: "管理员", // 默认记账人
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
+      if (!formData.name || !formData.startDate || !formData.endDate) {
+        setError("请填写所有必填项！");
+        setLoading(false);
+        return;
+      }
+
+      if (new Date(formData.startDate) > new Date(formData.endDate)) {
+        setError("结束日期不能早于开始日期！");
+        setLoading(false);
+        return;
+      }
+
+      // 使用完整的日期字符串作为时间（默认为当天的00:00和23:59）
+      const startDateTime = `${formData.startDate}T00:00:00`;
+      const endDateTime = `${formData.endDate}T23:59:59`;
+
       const event: Event = {
-        id: Utils.generateId(),
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
         name: formData.name,
-        startDateTime: `${formData.startDate}T${formData.startTime}`,
-        endDateTime: `${formData.endDate}T${formData.endTime}`,
+        startDateTime,
+        endDateTime,
         passwordHash: CryptoService.hash(formData.password),
         theme: formData.theme,
-        recorder: formData.recorder,
+        recorder: formData.recorder || undefined,
         createdAt: new Date().toISOString(),
       };
 
-      // 保存到 localStorage
-      const events = JSON.parse(
+      const existingEvents = JSON.parse(
         localStorage.getItem("giftlist_events") || "[]"
       );
-      events.push(event);
-      localStorage.setItem("giftlist_events", JSON.stringify(events));
+      existingEvents.push(event);
+      localStorage.setItem("giftlist_events", JSON.stringify(existingEvents));
 
-      // 保存 GitHub 配置（如果有）
-      if (formData.githubSync) {
-        const githubConfig = {
-          owner: formData.githubOwner,
-          repo: formData.githubRepo,
-          token: formData.githubToken,
-        };
-        localStorage.setItem("giftlist_github", JSON.stringify(githubConfig));
+      // 自动创建测试数据
+      const testGifts = [
+        {
+          id: "test1",
+          eventId: event.id,
+          encryptedData: CryptoService.encrypt(
+            {
+              name: "测试来宾",
+              amount: 888,
+              type: "现金" as const,
+              remark: "新婚快乐",
+              timestamp: new Date().toISOString(),
+            },
+            formData.password
+          ),
+        },
+      ];
+      localStorage.setItem(`giftlist_gifts_${event.id}`, JSON.stringify(testGifts));
 
-        // 测试连接
-        const github = new GitHubService(githubConfig);
-        const connected = await github.testConnection();
-        if (!connected) {
-          alert("GitHub 连接失败，将只使用本地存储");
-          localStorage.removeItem("giftlist_github");
-        } else {
-          // 初始化仓库数据
-          await github.syncEvents(events);
-        }
-      }
-
-      // 保存会话
+      // 保存会话信息
       sessionStorage.setItem(
         "currentEvent",
         JSON.stringify({
-          event,
+          event: event,
           password: formData.password,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
         })
       );
 
-      // 重置首页跳转标记，允许重新选择
-      sessionStorage.removeItem("has_redirected");
-
-      router.replace("/main");
+      // 直接跳转到主页面
+      navigate("/main", { replace: true });
     } catch (err) {
       console.error(err);
-      alert("创建失败: " + err);
+      setError("创建事件失败: " + err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl p-8 fade-in">
-        <h1 className="text-3xl font-bold mb-6 text-center themed-header">
-          电子礼簿系统
-        </h1>
-        <h2 className="text-xl font-semibold mb-6 text-center border-b pb-2">
-          创建新事项
-        </h2>
-
+    <PageLayout title="电子礼簿系统" subtitle="创建新事件，设置活动信息和管理密码">
+      <FormLayout title="创建新事件">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 基本信息 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              事项名称
-            </label>
-            <input
-              required
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="例如: 张三李四新婚之喜"
-              className="themed-ring"
-            />
-          </div>
+          <Input
+            label="事件名称 *"
+            type="text"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData({ ...formData, name: e.target.value })
+            }
+            placeholder="如：张三 & 李四 婚礼"
+            required
+            autoFocus
+          />
+
+          <Input
+            label="记账人（选填）"
+            type="text"
+            value={formData.recorder}
+            onChange={(e) =>
+              setFormData({ ...formData, recorder: e.target.value })
+            }
+            placeholder="记账人姓名"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                开始时间
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  required
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
-                  }
-                  className="themed-ring"
-                />
-                <input
-                  type="time"
-                  required
-                  value={formData.startTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startTime: e.target.value })
-                  }
-                  className="themed-ring"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                结束时间
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  required
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                  className="themed-ring"
-                />
-                <input
-                  type="time"
-                  required
-                  value={formData.endTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endTime: e.target.value })
-                  }
-                  className="themed-ring"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              管理密码
-            </label>
-            <input
-              required
-              type="password"
-              value={formData.password}
+            <Input
+              label="开始日期 *"
+              type="date"
+              value={formData.startDate}
               onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
+                setFormData({ ...formData, startDate: e.target.value })
               }
-              placeholder="默认 123456，请牢记，丢失无法找回"
-              className="themed-ring"
+              required
+            />
+            <Input
+              label="结束日期 *"
+              type="date"
+              value={formData.endDate}
+              onChange={(e) =>
+                setFormData({ ...formData, endDate: e.target.value })
+              }
+              required
             />
           </div>
 
-          {/* 更多设置 */}
-          <details className="group">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700 group-hover:text-gray-900 list-none">
-              <div className="flex items-center">
-                <span>更多设置</span>
-                <span className="text-lg ml-1 transition-transform transform group-open:rotate-180">
-                  ▼
-                </span>
-              </div>
-            </summary>
-            <div className="mt-4 p-4 card themed-border space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  界面风格
-                </label>
-                <select
-                  value={formData.theme}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      theme: e.target.value as "festive" | "solemn",
-                    })
-                  }
-                  className="themed-ring">
-                  <option value="festive">喜庆红 (喜事)</option>
-                  <option value="solemn">肃穆灰 (白事)</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  为不同性质的事项选择合适的界面配色风格。
-                </p>
-              </div>
+          <Input
+            label="管理密码 *"
+            type="password"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            placeholder="建议使用 123456"
+            required
+          />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  记账人
-                </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              主题风格
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
-                  value={formData.recorder}
-                  onChange={(e) =>
-                    setFormData({ ...formData, recorder: e.target.value })
-                  }
-                  placeholder="记账人 (例如: 王五，选填)"
+                  type="radio"
+                  name="theme"
+                  value="festive"
+                  checked={formData.theme === "festive"}
+                  onChange={() => setFormData({ ...formData, theme: "festive" })}
                   className="themed-ring"
                 />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.githubSync}
-                    onChange={(e) =>
-                      setFormData({ ...formData, githubSync: e.target.checked })
-                    }
-                  />
-                  <span className="font-medium">启用 GitHub 云端同步</span>
-                </label>
-
-                {formData.githubSync && (
-                  <div className="mt-3 space-y-3 card p-4">
-                    <p className="text-sm text-blue-800">
-                      数据将加密存储在你的 GitHub 仓库中，支持多设备同步
-                    </p>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        GitHub 用户名
-                      </label>
-                      <input
-                        required={formData.githubSync}
-                        placeholder="owner"
-                        value={formData.githubOwner}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            githubOwner: e.target.value,
-                          })
-                        }
-                        className="themed-ring"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        仓库名
-                      </label>
-                      <input
-                        required={formData.githubSync}
-                        placeholder="repo"
-                        value={formData.githubRepo}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            githubRepo: e.target.value,
-                          })
-                        }
-                        className="themed-ring"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Personal Access Token
-                      </label>
-                      <input
-                        required={formData.githubSync}
-                        type="password"
-                        placeholder="ghp_..."
-                        value={formData.githubToken}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            githubToken: e.target.value,
-                          })
-                        }
-                        className="themed-ring"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      需要 repo 权限。数据将保存在 data/ 目录下。
-                    </p>
-                  </div>
-                )}
-              </div>
+                <span>🎉 喜事（红色）</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="theme"
+                  value="solemn"
+                  checked={formData.theme === "solemn"}
+                  onChange={() => setFormData({ ...formData, theme: "solemn" })}
+                  className="themed-ring"
+                />
+                <span>🕯️ 白事（灰色）</span>
+              </label>
             </div>
-          </details>
+          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full themed-button-primary p-3 rounded-lg transition duration-300 font-bold hover-lift">
-            {loading ? "创建中..." : "创建并进入"}
-          </button>
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-1 p-3 rounded-lg font-bold"
+              disabled={loading}
+            >
+              {loading ? "创建中..." : "✨ 创建事件"}
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1 p-3 rounded-lg font-bold"
+              onClick={() => navigate("/")}
+            >
+              返回首页
+            </Button>
+          </div>
+
+          <div className="pt-4 text-xs text-gray-500 text-center">
+            💡 提示：默认密码建议使用 123456，创建后可在主页面修改
+          </div>
         </form>
-      </div>
-    </div>
+      </FormLayout>
+    </PageLayout>
   );
 }
