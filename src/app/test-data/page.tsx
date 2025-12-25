@@ -36,20 +36,24 @@ export default function TestData() {
     setLoading(true);
 
     try {
-      // 生成测试数据
+      // 生成测试数据 - 更多名字和数据
       const testNames = [
         "张三", "李四", "王五", "赵六", "钱七",
         "孙八", "周九", "吴十", "郑十一", "王十二",
-        "刘十三", "陈十四", "杨十五", "黄十六", "林十七"
+        "刘十三", "陈十四", "杨十五", "黄十六", "林十七",
+        "马十八", "徐十九", "朱二十", "胡二十一", "郭二十二",
+        "何二十三", "林二十四", "高二十五", "罗二十六", "郑二十七",
+        "梁二十八", "谢二十九", "宋三十", "唐三十一", "韩三十二"
       ];
 
       const testTypes = ["现金", "微信", "支付宝", "其他"] as const;
-      const testRemarks = ["新婚快乐", "百年好合", "恭喜发财", "万事如意", ""];
+      const testRemarks = ["新婚快乐", "百年好合", "恭喜发财", "万事如意", "幸福美满", "早生贵子", ""];
 
       const gifts: any[] = [];
 
-      for (let i = 0; i < 15; i++) {
-        const amount = Math.floor(Math.random() * 5000) + 100; // 100-5000
+      // 生成30条测试数据
+      for (let i = 0; i < 30; i++) {
+        const amount = Math.floor(Math.random() * 8000) + 100; // 100-8000
         const giftData = {
           name: testNames[i],
           amount: amount,
@@ -82,7 +86,14 @@ export default function TestData() {
       };
       localStorage.setItem("guest_screen_data", JSON.stringify(syncData));
 
-      alert(`✅ 成功生成 ${gifts.length} 条测试数据！\n\n现在可以：\n1. 返回首页登录\n2. 在主界面查看和管理数据\n3. 打开副屏（/guest-screen）实时查看`);
+      alert(`✅ 成功生成 ${gifts.length} 条测试数据！
+
+现在可以：
+1. 返回首页登录
+2. 在主界面查看和管理数据
+3. 打开副屏（/guest-screen）实时查看
+
+副屏将显示最新的12条数据`);
       navigate("/");
     } catch (err) {
       console.error(err);
@@ -106,10 +117,11 @@ export default function TestData() {
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
             <div className="font-bold text-blue-900 mb-1">说明：</div>
             <ul className="list-disc list-inside text-blue-800 space-y-1">
-              <li>自动生成 15 条随机礼金记录</li>
-              <li>金额范围：100-5000 元</li>
-              <li>包含多种支付方式</li>
+              <li>自动生成 30 条随机礼金记录</li>
+              <li>金额范围：100-8000 元</li>
+              <li>包含多种支付方式和备注</li>
               <li>数据已加密存储</li>
+              <li>副屏自动显示最新的12条</li>
             </ul>
           </div>
 
