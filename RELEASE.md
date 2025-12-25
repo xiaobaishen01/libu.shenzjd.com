@@ -1,95 +1,71 @@
 # 📦 发布指南
 
-本项目使用 GitHub Actions 自动发布，直接发布单个 HTML 文件。
+**✨ 只有这一个文件：index.html**
 
-## 🚀 快速发布
+下载后双击即可使用，无需解压，无需安装。
+
+---
+
+## 🚀 如何发布
 
 ### 方式1: Git Tag（推荐）
 
 ```bash
-# 1. 创建并推送 tag
 git tag v1.0.0
 git push origin v1.0.0
-
-# 2. GitHub Actions 自动完成：
-#    - 构建项目 (pnpm build)
-#    - 创建 Release
-#    - 上传 index.html
 ```
+
+GitHub Actions 自动完成：构建 → 发布 → 上传 index.html
 
 ### 方式2: 手动触发
 
 1. GitHub → Actions → Release 工作流
 2. 点击 **Run workflow**
 3. 输入版本号（如：v1.0.0）
-4. 点击 **Run workflow** 按钮
+4. 点击运行
+
+---
 
 ## 📦 发布内容
 
-Release 只包含：
-
 ```
-index.html          # 单文件应用（298KB）
+index.html          # 唯一的文件（298KB）
 ```
 
-**✨ 特性**：只有一个文件，下载即用！
+**✨ 下载即用，无需其他任何文件！**
 
-## 🎯 使用方式
+---
 
-### 方式1: 直接打开（推荐）
+## 💡 使用方式
 
-```bash
-# 下载 index.html
-# 双击即可使用！
-```
+**直接双击打开即可使用！**
 
-### 方式2: 部署到服务器
+或者：
+- 上传到 Web 服务器
+- 部署到 GitHub Pages
+- 发送给朋友直接用
 
-```bash
-# 上传 index.html 到 Web 服务器
-scp index.html user@your-server:/var/www/html/
-```
+---
 
-### 方式3: GitHub Pages
+## 🎯 发布前检查
 
-```bash
-# 将 index.html 推送到 gh-pages 分支
-git init && git add index.html && git commit -m "Deploy"
-git remote add origin <your-repo>
-git push -f origin main:gh-pages
-```
+- [ ] 代码已提交到 main
+- [ ] 本地测试通过：`pnpm build`
+- [ ] 确定版本号（如：v1.0.0）
 
-## 🔧 工作流配置
-
-### 触发条件
-- Push tag (格式: `v*`)
-- 手动触发
-
-### 构建步骤
-1. 安装依赖: `pnpm install`
-2. 类型检查: `tsc`
-3. 构建: `vite build` (生成单文件)
-4. 创建 Release 并上传 `index.html`
-
-## 📝 发布前检查
-
-- [ ] 代码已提交到 main 分支
-- [ ] 本地测试: `pnpm build` 通过
-- [ ] 确定版本号（语义化版本）
+---
 
 ## 🆘 常见问题
 
 **Q: 发布失败？**
-A: 查看 Actions 日志，检查构建错误
+A: 查看 Actions 日志
 
-**Q: 如何更新版本？**
+**Q: 如何更新？**
 A: 创建新 tag 并推送
 
-**Q: 可以发布测试版吗？**
-A: 可以，使用 `v1.0.0-beta` 等格式
+**Q: 可以测试版吗？**
+A: 可以，用 `v1.0.0-beta`
 
-## 💡 小贴士
+---
 
-- 发布前先本地测试 `pnpm build`
-- 使用语义化版本号（v1.0.0, v1.0.1, v1.1.0）
-- ✨ 只有一个文件，下载即用！
+**✨ 就这么简单！**
