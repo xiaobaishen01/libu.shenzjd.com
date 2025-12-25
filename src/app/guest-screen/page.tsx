@@ -1,6 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { Utils } from "@/lib/utils";
 
+declare global {
+  interface Window {
+    // Add global window properties if needed
+  }
+}
+
 interface GiftData {
   name: string;
   amount: number;
@@ -21,7 +27,7 @@ export default function GuestScreen() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevGiftCountRef = useRef(0);
   const lastNewDataTimeRef = useRef(0); // 记录最新数据时间
-  const autoScrollIntervalRef = useRef<NodeJS.Timeout | null>(null); // 自动轮播定时器
+  const autoScrollIntervalRef = useRef<number | null>(null); // 自动轮播定时器
   const isAutoScrollingRef = useRef(false); // 是否正在自动轮播
 
   // 监听数据同步
@@ -145,11 +151,6 @@ export default function GuestScreen() {
 
     // 启动轮播
     requestAnimationFrame(scrollStep);
-  };
-
-  // 停止自动轮播（当有新数据时调用）
-  const stopAutoScroll = () => {
-    isAutoScrollingRef.current = false;
   };
 
   if (!data) {
