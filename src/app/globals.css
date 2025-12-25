@@ -1000,6 +1000,7 @@ input[type="checkbox"].themed-ring:checked {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px 30px;
 }
 
 /* 翻页动画 - 从左向右翻 */
@@ -1039,7 +1040,8 @@ input[type="checkbox"].themed-ring:checked {
   padding: 4px;
   width: 100%;
   max-width: 100%;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 140px);
+  margin: 10px;
 }
 
 /* 礼金列 - 完全复制主页面的 gift-book-column */
