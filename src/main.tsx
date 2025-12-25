@@ -1,18 +1,17 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { HashRouter, Routes, Route } from 'react-router-dom'
-import './app/globals.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { HashRouter, Routes, Route } from "react-router-dom";
+import "./app/globals.css";
 
 // 页面组件
-import Home from './app/page'
-import Setup from './app/setup/page'
-import Main from './app/main/page'
-import GuestScreen from './app/guest-screen/page'
-import TestData from './app/test-data/page'
-import TestRedirect from './app/test-redirect/page'
-import NotFound from './app/not-found'
+import Home from "./app/page";
+import Setup from "./app/setup/page";
+import Main from "./app/main/page";
+import GuestScreen from "./app/guest-screen/page";
+import TestData from "./app/test-data/page";
+import NotFound from "./app/not-found";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HashRouter>
       <Routes>
@@ -21,9 +20,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/main" element={<Main />} />
         <Route path="/guest-screen" element={<GuestScreen />} />
         <Route path="/test-data" element={<TestData />} />
-        <Route path="/test-redirect" element={<TestRedirect />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </HashRouter>
   </React.StrictMode>
-)
+);

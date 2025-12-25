@@ -24,22 +24,22 @@ interface SyncData {
 
 // 翻页配置
 const PAGE_CONFIG = {
-  RECORDS_PER_PAGE: 6,      // 每页记录数（单行多列，像真实礼簿）
-  STAY_DURATION: 10000,     // 新数据停留时间（10秒）
-  FLIP_SPEED: 600,          // 翻页动画速度（毫秒）
-  AUTO_INTERVAL: 5000,      // 自动翻页间隔（5秒，从第一页翻到最新页后循环）
+  RECORDS_PER_PAGE: 6, // 每页记录数（单行多列，像真实礼簿）
+  STAY_DURATION: 10000, // 新数据停留时间（10秒）
+  FLIP_SPEED: 600, // 翻页动画速度（毫秒）
+  AUTO_INTERVAL: 5000, // 自动翻页间隔（5秒，从第一页翻到最新页后循环）
 };
 
 export default function GuestScreen() {
   const [data, setData] = useState<SyncData | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);      // 当前页码
-  const [isFlipping, setIsFlipping] = useState(false);    // 翻页动画状态
+  const [currentPage, setCurrentPage] = useState(0); // 当前页码
+  const [isFlipping, setIsFlipping] = useState(false); // 翻页动画状态
 
   const prevGiftCountRef = useRef(0);
-  const lastNewDataTimeRef = useRef(0);                   // 记录最新数据时间
-  const stayTimerRef = useRef<number | null>(null);       // 10秒停留定时器
-  const autoFlipTimerRef = useRef<number | null>(null);   // 自动翻页定时器
-  const totalPagesRef = useRef(0);                        // 总页数
+  const lastNewDataTimeRef = useRef(0); // 记录最新数据时间
+  const stayTimerRef = useRef<number | null>(null); // 10秒停留定时器
+  const autoFlipTimerRef = useRef<number | null>(null); // 自动翻页定时器
+  const totalPagesRef = useRef(0); // 总页数
 
   // 监听数据同步
   useEffect(() => {
@@ -108,7 +108,6 @@ export default function GuestScreen() {
         // 10秒后开始自动翻页循环
         startAutoFlipCycle();
       }, PAGE_CONFIG.STAY_DURATION);
-
     } else if (data.gifts.length > 0 && pagedData.length > 1) {
       // ✅ 无新数据但有多页：检查是否需要开始自动循环
       const timeSinceLastNewData = Date.now() - lastNewDataTimeRef.current;
@@ -170,11 +169,17 @@ export default function GuestScreen() {
       flipToPage(nextPage);
 
       // 设置下一次翻页
-      autoFlipTimerRef.current = window.setTimeout(cycleStep, PAGE_CONFIG.STAY_DURATION);
+      autoFlipTimerRef.current = window.setTimeout(
+        cycleStep,
+        PAGE_CONFIG.STAY_DURATION
+      );
     };
 
     // 延迟一段时间后开始循环，让用户看清当前页
-    autoFlipTimerRef.current = window.setTimeout(cycleStep, PAGE_CONFIG.AUTO_INTERVAL);
+    autoFlipTimerRef.current = window.setTimeout(
+      cycleStep,
+      PAGE_CONFIG.AUTO_INTERVAL
+    );
   };
 
   if (!data || pagedData.length === 0) {
@@ -191,31 +196,32 @@ export default function GuestScreen() {
     return name.length === 2 ? `${name[0]}　${name[1]}` : name;
   };
 
-  const themeClass = data.theme === "theme-festive" ? "theme-festive" : "theme-solemn";
+  const themeClass =
+    data.theme === "theme-festive" ? "theme-festive" : "theme-solemn";
   const totalPages = pagedData.length;
   const currentPageData = pagedData[currentPage] || [];
 
   return (
     <div className={`guest-screen-wrapper ${themeClass}`}>
-      {/* 顶部标题 */}
+      {/* 顶部标题 - 固定在上方 */}
       <div className="guest-screen-header">
         <h1 className="guest-screen-title">{data.eventName}</h1>
       </div>
 
-      {/* 礼簿内容 - 直接使用 gift-book-columns */}
-      <div className={`flip-container ${isFlipping ? 'flipping' : ''}`}>
+      {/* 礼簿内容 - 在下方，使用翻页动画 */}
+      <div className={`flip-container ${isFlipping ? "flipping" : ""}`}>
         <div className="gift-book-columns">
           {currentPageData.map((gift, idx) => {
-            const isLatest = currentPage === totalPages - 1 && idx === currentPageData.length - 1;
+            const isLatest =
+              currentPage === totalPages - 1 &&
+              idx === currentPageData.length - 1;
             return (
               <div
                 key={idx}
-                className={`gift-book-column ${isLatest ? 'latest' : ''}`}
+                className={`gift-book-column ${isLatest ? "latest" : ""}`}
                 data-index={idx}>
                 <div className="book-cell name-cell column-top">
-                  <div className="name">
-                    {formatName(gift.name)}
-                  </div>
+                  <div className="name">{formatName(gift.name)}</div>
                 </div>
                 <div className="book-cell amount-cell column-bottom">
                   <div className="amount-chinese">

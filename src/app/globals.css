@@ -957,7 +957,7 @@ input[type="checkbox"].themed-ring:checked {
 
 /* ==================== 副屏样式 - 完全参考主页面 ==================== */
 
-/* 副屏容器 - 全屏布局 */
+/* 副屏容器 - 上下结构全屏布局 */
 .guest-screen-wrapper {
   height: 100vh;
   display: flex;
@@ -993,14 +993,30 @@ input[type="checkbox"].themed-ring:checked {
   font-family: "KaiTi", "楷体", serif;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   padding: 8px 20px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--primary-bg-light),
-    transparent
-  );
+  background: linear-gradient(to right, transparent, var(--primary-bg-light), transparent);
   border-radius: 8px;
   white-space: nowrap;
+}
+
+/* 翻页动画容器 - 包裹礼簿网格 */
+.flip-container {
+  flex: 1;
+  perspective: 3000px;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* 副屏网格容器 - 限制最大宽度确保列宽一致 */
+.guest-screen-wrapper .gift-book-columns {
+  max-width: 720px; /* 限制最大宽度，使每列约60px */
+  width: 100%;
+  margin: 0 auto; /* 居中显示 */
 }
 
 /* 翻页动画容器 - 包裹礼簿网格 */
