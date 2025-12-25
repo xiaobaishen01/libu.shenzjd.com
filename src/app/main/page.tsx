@@ -89,11 +89,11 @@ export default function MainPage() {
   // 同步数据到副屏
   const syncDataToGuestScreen = () => {
     if (state.currentEvent) {
-      // 获取有效的礼金数据（未作废的）
+      // 获取所有有效的礼金数据（未作废的），按时间排序
       const validGifts = state.gifts
         .filter((g) => g.data && !g.data.abolished)
         .map((g) => g.data!)
-        .slice(-12); // 只取最新的12条
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
       const syncData = {
         eventName: state.currentEvent.name,
@@ -239,9 +239,256 @@ export default function MainPage() {
     alert('导出Excel功能将在后续版本中实现');
   };
 
-  // 导出 PDF（使用浏览器打印）
+  // 导出 PDF（打印所有数据，横屏展示）
   const exportPDF = () => {
-    window.print();
+    // 获取所有有效礼金数据
+    const validGifts = state.gifts
+      .filter((g) => g.data && !g.data.abolished)
+      .map((g) => g.data!);
+
+    if (validGifts.length === 0) {
+      alert('暂无礼金记录可打印');
+      return;
+    }
+
+    // 打开新窗口进行打印
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('无法打开打印窗口，请检查浏览器设置');
+      return;
+    }
+
+    // 判断主题
+    const isFestive = state.currentEvent!.theme === 'festive';
+
+    // 按时间排序
+    const sortedGifts = validGifts.sort((a, b) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    // 生成礼簿内容HTML
+    const giftColumnsHTML = sortedGifts.map(gift => {
+      const name = gift.name.length === 2 ? `${gift.name[0]}　${gift.name[1]}` : gift.name;
+      const amountChinese = Utils.amountToChinese(gift.amount);
+      return `
+        <div class="print-gift-column">
+          <div class="book-cell name-cell">${name}</div>
+          <div class="book-cell amount-cell">${amountChinese}</div>
+        </div>
+      `;
+    }).join('');
+
+    // 生成统计信息
+    const totalAmount = validGifts.reduce((sum, g) => sum + g.amount, 0);
+    const typeStats = validGifts.reduce((acc, g) => {
+      acc[g.type] = (acc[g.type] || 0) + g.amount;
+      return acc;
+    }, {} as Record<string, number>);
+    const statsHTML = Object.entries(typeStats).map(([type, amount]) =>
+      `<span>${type}: ¥${amount.toFixed(2)}</span>`
+    ).join('');
+
+    // 根据主题设置颜色
+    const themeColors = {
+      festive: {
+        primary: '#d9534f',      // 喜事红
+        secondary: '#c9302c',    // 深红
+        border: '#f8d7da',       // 浅红边框
+        text: '#721c24',         // 深红文字
+        bg: '#fff5f5',           // 浅红背景
+        stats: '#d9534f'         // 统计红色
+      },
+      solemn: {
+        primary: '#343a40',      // 丧事黑
+        secondary: '#495057',    // 深灰
+        border: '#e9ecef',       // 浅灰边框
+        text: '#212529',         // 深黑文字
+        bg: '#f8f9fa',           // 浅灰背景
+        stats: '#495057'         // 统计灰色
+      }
+    };
+
+    const colors = themeColors[isFestive ? 'festive' : 'solemn'];
+
+    // 生成打印HTML
+    const printHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>礼金簿打印 - ${state.currentEvent!.name}</title>
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: "KaiTi", "楷体", serif;
+            background: ${colors.bg};
+          }
+
+          .print-container {
+            width: 100%;
+            height: 100%;
+            padding: 5mm;
+            box-sizing: border-box;
+          }
+
+          .print-header {
+            margin-bottom: 8mm;
+            padding-bottom: 3mm;
+            border-bottom: 3px solid ${colors.primary};
+            background: linear-gradient(to right, ${colors.bg}, white);
+            padding: 3mm 2mm;
+            border-radius: 4px;
+          }
+
+          .print-header h1 {
+            font-size: 26pt;
+            margin: 0 0 5mm 0;
+            font-weight: bold;
+            text-align: center;
+            color: ${colors.primary};
+            letter-spacing: 2px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          }
+
+          .print-header .info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10pt;
+            color: ${colors.text};
+            margin-bottom: 3mm;
+            font-weight: 500;
+          }
+
+          .print-header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 15mm;
+            margin-top: 3mm;
+            font-size: 11pt;
+            font-weight: bold;
+            flex-wrap: wrap;
+          }
+
+          .print-header .stats span {
+            white-space: nowrap;
+            color: ${colors.stats};
+            background: white;
+            padding: 2mm 3mm;
+            border-radius: 4px;
+            border: 1px solid ${colors.border};
+          }
+
+          .print-gift-columns {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5mm;
+            grid-auto-rows: minmax(38mm, auto);
+            margin-bottom: 10mm;
+          }
+
+          .print-gift-column {
+            display: grid;
+            grid-template-rows: 1fr 1.2fr;
+            border: 2px solid ${colors.border};
+            border-radius: 4px;
+            overflow: hidden;
+            page-break-inside: avoid;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+
+          .book-cell {
+            display: grid;
+            place-items: center;
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            font-weight: bold;
+            padding: 10px 0;
+            overflow: hidden;
+            text-align: center;
+            line-height: 1.2;
+          }
+
+          .name-cell {
+            border-bottom: 2px solid ${colors.border};
+            font-size: 19pt;
+            color: ${colors.text};
+            background: ${isFestive ? 'linear-gradient(to bottom, #fff, #fff5f5)' : 'linear-gradient(to bottom, #fff, #f8f9fa)'};
+          }
+
+          .amount-cell {
+            font-size: 17pt;
+            color: ${colors.primary};
+            background: white;
+          }
+
+          .print-footer {
+            position: fixed;
+            bottom: 5mm;
+            left: 10mm;
+            right: 10mm;
+            text-align: center;
+            font-size: 8pt;
+            color: ${colors.secondary};
+            border-top: 1px solid ${colors.border};
+            padding-top: 2mm;
+            background: white;
+            border-radius: 2px;
+          }
+
+          @media print {
+            .print-footer::after {
+              content: "页码: " counter(page);
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          <div class="print-header">
+            <h1>${state.currentEvent!.name}</h1>
+            <div class="info">
+              <span>时间: ${formatDateTime(state.currentEvent!.startDateTime)} ~ ${formatDateTime(state.currentEvent!.endDateTime)}</span>
+              ${state.currentEvent!.recorder ? `<span>记账人: ${state.currentEvent!.recorder}</span>` : ''}
+            </div>
+            <div class="stats">
+              <span>总金额: ¥${totalAmount.toFixed(2)}</span>
+              <span>总人数: ${validGifts.length}人</span>
+              ${statsHTML}
+            </div>
+          </div>
+
+          <div class="print-gift-columns">
+            ${giftColumnsHTML}
+          </div>
+
+          <div class="print-footer">
+            打印时间: ${new Date().toLocaleString('zh-CN')} | 共 ${validGifts.length} 条记录
+          </div>
+        </div>
+
+        <script>
+          // 自动打印
+          setTimeout(() => {
+            window.print();
+            // 打印后关闭窗口
+            setTimeout(() => {
+              window.close();
+            }, 500);
+          }, 100);
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
   };
 
   // 导出备份
@@ -258,7 +505,8 @@ export default function MainPage() {
     // 获取当前页面的完整路径，替换 hash 部分为副屏路径
     const currentUrl = window.location.href;
     const baseUrl = currentUrl.split('#')[0];
-    window.open(`${baseUrl}#/guest-screen`, "_blank", "width=1200,height=800");
+    // 打开最大化窗口，适合横屏展示
+    window.open(`${baseUrl}#/guest-screen`, "_blank", "width=1920,height=1080,left=0,top=0,fullscreen=yes,menubar=no,toolbar=no,location=no,status=no");
   };
 
   // 导入备份成功
