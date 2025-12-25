@@ -933,15 +933,6 @@ input[type="checkbox"].themed-ring:checked {
 
 /* ==================== 副屏样式 ==================== */
 
-/* 副屏容器 */
-.guest-screen-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--primary-bg-light) 0%, #ffffff 100%);
-}
-
 /* 空状态 */
 .guest-screen-empty {
   min-height: 100vh;
@@ -964,41 +955,182 @@ input[type="checkbox"].themed-ring:checked {
   font-size: 1rem;
 }
 
-/* 标题区域 */
+
+/* ==================== 副屏样式 - 完全参考主页面 ==================== */
+
+/* 副屏容器 - 全屏布局 */
+.guest-screen-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--primary-bg-light) 0%, #ffffff 100%);
+}
+
+/* 顶部标题区域 */
 .guest-screen-header {
   background: white;
-  padding: 8px 12px;
-  border-bottom: 3px solid var(--primary-color);
-  box-shadow: 0 2px 8px var(--shadow-color);
+  padding: 12px 24px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: none;
 }
 
 .guest-screen-title {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 2.4rem;
+  font-weight: 900;
   text-align: center;
   color: var(--header-text-color);
-  margin: 0 0 4px 0;
+  margin: 0;
+  letter-spacing: 6px;
+  font-family: "KaiTi", "楷体", serif;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* 翻页动画容器 - 包裹礼簿网格 */
+.flip-container {
+  flex: 1;
+  perspective: 3000px;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 翻页动画 - 从左向右翻 */
+.flip-container.flipping {
+  animation: flipPage 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes flipPage {
+  0% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: rotateY(-85deg);
+    opacity: 0.8;
+  }
+  60% {
+    transform: rotateY(-85deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+/* 礼簿网格 - 完全复制主页面的 gift-book-columns */
+.gift-book-columns {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 2px;
+  border-top: 2px solid var(--primary-border-color);
+  background: var(--primary-border-color);
+  border-radius: 8px;
+  overflow: visible;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  padding: 4px;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 100px);
+}
+
+/* 礼金列 - 完全复制主页面的 gift-book-column */
+.gift-book-column {
+  display: grid;
+  grid-template-rows: 1fr 1.6fr;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--primary-border-color);
+}
+
+/* 最新记录高亮 - 参考主页面 hover 效果 */
+.gift-book-column.latest {
+  background: var(--link-hover-bg);
+  z-index: 10;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
+}
+
+/* 列内部的分隔线 - 完全复制主页面 */
+.gift-book-column .column-top {
+  border-bottom: 2px solid var(--primary-border-color);
+}
+
+/* 单元格基础样式 - 完全复制主页面的 book-cell */
+.book-cell {
+  display: grid;
+  place-items: center;
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
+  font-weight: bold;
+  font-size: clamp(16px, 1.6vw, 25px);
+  letter-spacing: 7px;
+  font-family: "KaiTi", "楷体", serif;
+  padding: 10px 0;
+  overflow: hidden;
+  text-align: center;
+  min-width: 0;
+  position: relative;
+  line-height: 1.2;
+  transition: all 0.3s ease;
+  border: none !important;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* 姓名单元格特定样式 - 完全复制主页面 */
+.name-cell .name {
+  color: var(--primary-text-color, #333);
+  padding: 15px 0;
+  cursor: pointer;
+  font-size: 1.8rem;
+  letter-spacing: 8px;
+  min-height: 6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 金额单元格特定样式 - 完全复制主页面 */
+.amount-cell .amount-chinese {
+  color: var(--primary-text-color, #333);
+  padding: 12px 0;
+  font-size: 1.6rem;
+  letter-spacing: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-number,
+.page-total {
+  font-family: "KaiTi", "楷体", serif;
   letter-spacing: 1px;
 }
 
-.guest-screen-info {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  font-size: 0.85rem;
-  color: var(--total-text-color);
-  font-weight: 600;
-  flex-wrap: wrap;
+.page-separator {
+  color: var(--primary-color);
+  font-weight: bold;
+  font-size: 1.2rem;
 }
 
-.guest-screen-info span {
-  white-space: nowrap;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--primary-border-color);
-}
+/* ==================== 旧的滚动列表样式（保留备用） ==================== */
 
 /* 滚动列表区域 */
 .guest-screen-list {

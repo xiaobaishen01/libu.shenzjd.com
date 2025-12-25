@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Utils } from "@/lib/utils";
 
 declare global {
@@ -22,13 +22,24 @@ interface SyncData {
   gifts: GiftData[];
 }
 
+// 翻页配置
+const PAGE_CONFIG = {
+  RECORDS_PER_PAGE: 6,      // 每页记录数（单行多列，像真实礼簿）
+  STAY_DURATION: 10000,     // 新数据停留时间（10秒）
+  FLIP_SPEED: 600,          // 翻页动画速度（毫秒）
+  AUTO_INTERVAL: 5000,      // 自动翻页间隔（5秒，从第一页翻到最新页后循环）
+};
+
 export default function GuestScreen() {
   const [data, setData] = useState<SyncData | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(0);      // 当前页码
+  const [isFlipping, setIsFlipping] = useState(false);    // 翻页动画状态
+
   const prevGiftCountRef = useRef(0);
-  const lastNewDataTimeRef = useRef(0); // 记录最新数据时间
-  const autoScrollIntervalRef = useRef<number | null>(null); // 自动轮播定时器
-  const isAutoScrollingRef = useRef(false); // 是否正在自动轮播
+  const lastNewDataTimeRef = useRef(0);                   // 记录最新数据时间
+  const stayTimerRef = useRef<number | null>(null);       // 10秒停留定时器
+  const autoFlipTimerRef = useRef<number | null>(null);   // 自动翻页定时器
+  const totalPagesRef = useRef(0);                        // 总页数
 
   // 监听数据同步
   useEffect(() => {
@@ -54,106 +65,114 @@ export default function GuestScreen() {
     };
   }, []);
 
-  // 数据更新处理 + 自动轮播逻辑
+  // 分页数据计算
+  const pagedData = useMemo(() => {
+    if (!data || data.gifts.length === 0) return [];
+
+    const pages: GiftData[][] = [];
+    const gifts = data.gifts;
+
+    for (let i = 0; i < gifts.length; i += PAGE_CONFIG.RECORDS_PER_PAGE) {
+      pages.push(gifts.slice(i, i + PAGE_CONFIG.RECORDS_PER_PAGE));
+    }
+
+    totalPagesRef.current = pages.length;
+    return pages;
+  }, [data]);
+
+  // 数据更新处理 + 翻页逻辑
   useEffect(() => {
-    if (!data || !scrollRef.current) return;
+    if (!data || pagedData.length === 0) return;
 
     const hasNewData = data.gifts.length > prevGiftCountRef.current;
     const currentTime = Date.now();
 
-    // 清除之前的轮播定时器
-    if (autoScrollIntervalRef.current) {
-      clearInterval(autoScrollIntervalRef.current);
-      autoScrollIntervalRef.current = null;
-    }
+    // 清除之前的定时器
+    clearAllTimers();
 
     if (hasNewData) {
-      // ✅ 有新数据：滚动到最新记录
+      // ✅ 有新数据：翻到最新页
       lastNewDataTimeRef.current = currentTime;
-      isAutoScrollingRef.current = false;
+      const latestPage = pagedData.length - 1;
 
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-        }
-      }, 100);
+      // 立即翻到最新页
+      flipToPage(latestPage);
 
-      // 启动10秒后的轮播检查
-      autoScrollIntervalRef.current = setInterval(() => {
-        checkAndStartAutoScroll();
-      }, 1000); // 每秒检查一次
+      // 启动10秒停留计时器
+      stayTimerRef.current = setTimeout(() => {
+        // 10秒后开始自动翻页循环
+        startAutoFlipCycle();
+      }, PAGE_CONFIG.STAY_DURATION);
 
-    } else if (data.gifts.length > 0) {
-      // ✅ 无新数据但有数据：检查是否需要开始轮播
-      checkAndStartAutoScroll();
+    } else if (data.gifts.length > 0 && pagedData.length > 1) {
+      // ✅ 无新数据但有多页：检查是否需要开始自动循环
+      const timeSinceLastNewData = Date.now() - lastNewDataTimeRef.current;
+
+      if (timeSinceLastNewData > PAGE_CONFIG.STAY_DURATION) {
+        // 已经超过停留时间，开始自动循环
+        startAutoFlipCycle();
+      } else {
+        // 还在停留时间内，设置剩余时间的计时器
+        const remainingTime = PAGE_CONFIG.STAY_DURATION - timeSinceLastNewData;
+        stayTimerRef.current = setTimeout(() => {
+          startAutoFlipCycle();
+        }, remainingTime);
+      }
     }
 
     prevGiftCountRef.current = data.gifts.length;
 
     // 清理函数
     return () => {
-      if (autoScrollIntervalRef.current) {
-        clearInterval(autoScrollIntervalRef.current);
-      }
+      clearAllTimers();
     };
-  }, [data]);
+  }, [data, pagedData]);
 
-  // 检查并开始自动轮播
-  const checkAndStartAutoScroll = () => {
-    if (!scrollRef.current || !data || data.gifts.length === 0) return;
-
-    const timeSinceLastNewData = Date.now() - lastNewDataTimeRef.current;
-    const scrollWidth = scrollRef.current.scrollWidth;
-    const clientWidth = scrollRef.current.clientWidth;
-    const maxScrollLeft = scrollWidth - clientWidth;
-
-    // 超过10秒无新数据，且数据足够滚动
-    if (timeSinceLastNewData > 10000 && maxScrollLeft > 0 && !isAutoScrollingRef.current) {
-      startAutoScroll();
+  // 清除所有定时器
+  const clearAllTimers = () => {
+    if (stayTimerRef.current !== null) {
+      window.clearTimeout(stayTimerRef.current);
+      stayTimerRef.current = null;
+    }
+    if (autoFlipTimerRef.current !== null) {
+      window.clearTimeout(autoFlipTimerRef.current);
+      autoFlipTimerRef.current = null;
     }
   };
 
-  // 开始自动轮播（单向无限滚动）
-  const startAutoScroll = () => {
-    if (!scrollRef.current || isAutoScrollingRef.current) return;
+  // 翻页到指定页码
+  const flipToPage = (targetPage: number) => {
+    if (targetPage === currentPage) return;
 
-    isAutoScrollingRef.current = true;
-    const scrollElement = scrollRef.current;
-    const scrollWidth = scrollElement.scrollWidth;
-    const clientWidth = scrollElement.clientWidth;
-    const maxScrollLeft = scrollWidth - clientWidth;
+    setIsFlipping(true);
 
-    // 如果数据不够滚动，直接返回
-    if (maxScrollLeft <= 0) {
-      isAutoScrollingRef.current = false;
-      return;
-    }
-
-    // 从最右侧开始
-    scrollElement.scrollLeft = maxScrollLeft;
-
-    const scrollStep = () => {
-      if (!isAutoScrollingRef.current || !scrollElement) return;
-
-      // 单向向左滚动（从右到左）
-      scrollElement.scrollLeft -= 1;
-
-      // 到达左边界，重置到最右侧继续滚动
-      if (scrollElement.scrollLeft <= 0) {
-        scrollElement.scrollLeft = maxScrollLeft;
-      }
-
-      // 继续下一次滚动
-      if (isAutoScrollingRef.current) {
-        requestAnimationFrame(scrollStep);
-      }
-    };
-
-    // 启动轮播
-    requestAnimationFrame(scrollStep);
+    // 翻页动画
+    window.setTimeout(() => {
+      setCurrentPage(targetPage);
+      setIsFlipping(false);
+    }, PAGE_CONFIG.FLIP_SPEED);
   };
 
-  if (!data) {
+  // 开始自动翻页循环
+  const startAutoFlipCycle = () => {
+    if (pagedData.length <= 1) return; // 只有一页时不循环
+
+    const cycleStep = () => {
+      // 计算下一页（循环）
+      const nextPage = (currentPage + 1) % pagedData.length;
+
+      // 翻到下一页
+      flipToPage(nextPage);
+
+      // 设置下一次翻页
+      autoFlipTimerRef.current = window.setTimeout(cycleStep, PAGE_CONFIG.STAY_DURATION);
+    };
+
+    // 延迟一段时间后开始循环，让用户看清当前页
+    autoFlipTimerRef.current = window.setTimeout(cycleStep, PAGE_CONFIG.AUTO_INTERVAL);
+  };
+
+  if (!data || pagedData.length === 0) {
     return (
       <div className="guest-screen-empty">
         <h1>副屏展示</h1>
@@ -168,36 +187,40 @@ export default function GuestScreen() {
   };
 
   const themeClass = data.theme === "theme-festive" ? "theme-festive" : "theme-solemn";
+  const totalPages = pagedData.length;
+  const currentPageData = pagedData[currentPage] || [];
 
   return (
     <div className={`guest-screen-wrapper ${themeClass}`}>
-      {/* 标题和统计 */}
+      {/* 顶部标题 */}
       <div className="guest-screen-header">
         <h1 className="guest-screen-title">{data.eventName}</h1>
-        <div className="guest-screen-info">
-          <span>总数: {data.gifts.length}人</span>
-          <span>总金额: ¥{data.gifts.reduce((sum, g) => sum + g.amount, 0).toFixed(0)}</span>
-        </div>
       </div>
 
-      {/* 礼金列表 - 横向滚动 */}
-      <div className="guest-screen-list" ref={scrollRef}>
-        {data.gifts.map((gift, idx) => {
-          const isLatest = idx === data.gifts.length - 1;
-          return (
-            <div
-              key={idx}
-              className={`guest-screen-column ${isLatest ? 'latest' : ''}`}
-              data-index={idx}>
-              <div className="guest-screen-name">
-                {formatName(gift.name)}
+      {/* 礼簿内容 - 直接使用 gift-book-columns */}
+      <div className={`flip-container ${isFlipping ? 'flipping' : ''}`}>
+        <div className="gift-book-columns">
+          {currentPageData.map((gift, idx) => {
+            const isLatest = currentPage === totalPages - 1 && idx === currentPageData.length - 1;
+            return (
+              <div
+                key={idx}
+                className={`gift-book-column ${isLatest ? 'latest' : ''}`}
+                data-index={idx}>
+                <div className="book-cell name-cell column-top">
+                  <div className="name">
+                    {formatName(gift.name)}
+                  </div>
+                </div>
+                <div className="book-cell amount-cell column-bottom">
+                  <div className="amount-chinese">
+                    {Utils.amountToChinese(gift.amount)}
+                  </div>
+                </div>
               </div>
-              <div className="guest-screen-amount">
-                {Utils.amountToChinese(gift.amount)}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
