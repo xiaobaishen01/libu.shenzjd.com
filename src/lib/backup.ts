@@ -1,6 +1,5 @@
 import { Event, GiftRecord, GiftData, GiftType } from '@/types';
-import { amountToChinese, formatDate } from '@/utils/format';
-import { Utils } from '@/lib/utils';
+import { amountToChinese, formatDate, generateId } from '@/utils/format';
 import * as XLSX from 'xlsx';
 
 // Excel 导入结果接口
@@ -351,7 +350,7 @@ export class BackupService {
 
       if (eventInfo.name) {
         preview.events.push({
-          id: Utils.generateId(),
+          id: generateId(),
           name: eventInfo.name,
           startDateTime: eventInfo.startDateTime || new Date().toISOString(),
           endDateTime: eventInfo.endDateTime || new Date().toISOString(),
@@ -449,7 +448,7 @@ export class BackupService {
         if (options.createNewEvent || !targetEventId) {
           // 创建新事件
           const event = preview.events[0];
-          event.id = Utils.generateId();
+          event.id = generateId();
           event.passwordHash = ''; // 不再需要密码
 
           // 保存事件
@@ -521,7 +520,7 @@ export class BackupService {
 
         // 创建记录（直接存储JSON，无需加密）
         const record: GiftRecord = {
-          id: Utils.generateId(),
+          id: generateId(),
           eventId: targetEventId,
           encryptedData: JSON.stringify(gift),
         };

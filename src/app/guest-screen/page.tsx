@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Utils } from "@/lib/utils";
+import { amountToChinese } from "@/utils/format";
 
 declare global {
   interface Window {
@@ -91,7 +91,7 @@ export default function GuestScreen() {
               </div>
               <div className="book-cell amount-cell column-bottom">
                 <div className="amount-chinese">
-                  {Utils.amountToChinese(gift.amount)}
+                  {amountToChinese(gift.amount)}
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Event, GiftData, GiftRecord } from '@/types';
+import { generateId } from '@/utils/format';
 
 // 全局应用状态接口
 interface AppState {
@@ -20,11 +21,21 @@ const initialState: AppState = {
   events: [],
   gifts: [],
   loading: {
-    events: true,  // 初始为true，因为需要从localStorage加载
+    events: true,
     gifts: false,
     submitting: false,
   },
   error: null,
+};
+
+// 错误处理辅助函数
+const handleError = (error: unknown, message: string, setState: any) => {
+  console.error(message, error);
+  setState((prev: AppState) => ({
+    ...prev,
+    error: message,
+    loading: { ...prev.loading, events: false, gifts: false, submitting: false }
+  }));
 };
 
 // 全局状态管理Hook
@@ -54,16 +65,11 @@ export const useAppStore = () => {
       const events: Event[] = storedEvents ? JSON.parse(storedEvents) : [];
       setState(prev => ({ ...prev, events, loading: { ...prev.loading, events: false } }));
     } catch (error) {
-      console.error('Failed to load events:', error);
-      setState(prev => ({
-        ...prev,
-        loading: { ...prev.loading, events: false },
-        error: '加载事件失败'
-      }));
+      handleError(error, '加载事件失败', setState);
     }
   };
 
-  // 从localStorage加载礼物数据（无需密码，明文读取）
+  // 从localStorage加载礼物数据（明文读取）
   const loadGifts = async (eventId: string) => {
     try {
       setState(prev => ({ ...prev, loading: { ...prev.loading, gifts: true } }));
@@ -76,8 +82,7 @@ export const useAppStore = () => {
           const data = JSON.parse(record.encryptedData) as GiftData;
           return { record, data };
         } catch (e) {
-          // 如果解析失败，可能是旧数据，尝试作为普通对象
-          console.warn('Failed to parse gift data:', e);
+          console.warn('解析礼金数据失败:', e);
           return { record, data: null };
         }
       });
@@ -88,12 +93,7 @@ export const useAppStore = () => {
         loading: { ...prev.loading, gifts: false }
       }));
     } catch (error) {
-      console.error('Failed to load gifts:', error);
-      setState(prev => ({
-        ...prev,
-        loading: { ...prev.loading, gifts: false },
-        error: '加载礼金数据失败'
-      }));
+      handleError(error, '加载礼金数据失败', setState);
     }
   };
 
@@ -118,13 +118,12 @@ export const useAppStore = () => {
       setState(prev => ({ ...prev, events: newEvents }));
       return true;
     } catch (error) {
-      console.error('Failed to add event:', error);
-      setState(prev => ({ ...prev, error: '添加事件失败' }));
+      handleError(error, '添加事件失败', setState);
       return false;
     }
   };
 
-  // 添加礼物记录（无需加密，直接存储JSON）
+  // 添加礼物记录（直接存储JSON）
   const addGift = async (giftData: GiftData) => {
     if (!state.currentEvent) {
       setState(prev => ({ ...prev, error: '未选择事件' }));
@@ -134,9 +133,9 @@ export const useAppStore = () => {
     try {
       setState(prev => ({ ...prev, loading: { ...prev.loading, submitting: true } }));
 
-      // 直接序列化为JSON字符串（无需加密）
+      // 直接序列化为JSON字符串
       const record: GiftRecord = {
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        id: generateId(),
         eventId: state.currentEvent.id,
         encryptedData: JSON.stringify(giftData),
       };
@@ -157,12 +156,7 @@ export const useAppStore = () => {
 
       return true;
     } catch (error) {
-      console.error('Failed to add gift:', error);
-      setState(prev => ({
-        ...prev,
-        loading: { ...prev.loading, submitting: false },
-        error: '添加礼金记录失败'
-      }));
+      handleError(error, '添加礼金记录失败', setState);
       return false;
     }
   };
@@ -177,27 +171,20 @@ export const useAppStore = () => {
     try {
       setState(prev => ({ ...prev, loading: { ...prev.loading, submitting: true } }));
 
-      // 从localStorage加载现有记录
       const key = `giftlist_gifts_${state.currentEvent.id}`;
       const existingRecords: GiftRecord[] = JSON.parse(localStorage.getItem(key) || "[]");
 
-      // 查找并修改目标记录（标记为作废而非物理删除）
       const updatedRecords = existingRecords.map(record => {
         if (record.id === giftId) {
-          // 解析原数据
-          const decryptedData = JSON.parse(record.encryptedData) as GiftData;
-          // 修改数据标记为作废
-          const updatedData = { ...decryptedData, abolished: true };
-          // 重新序列化
+          const data = JSON.parse(record.encryptedData) as GiftData;
+          const updatedData = { ...data, abolished: true };
           return { ...record, encryptedData: JSON.stringify(updatedData) };
         }
         return record;
       });
 
-      // 保存回localStorage
       localStorage.setItem(key, JSON.stringify(updatedRecords));
 
-      // 更新状态
       const updatedGifts = state.gifts.map(item => {
         if (item.record.id === giftId) {
           return { ...item, data: { ...item.data!, abolished: true } };
@@ -213,12 +200,7 @@ export const useAppStore = () => {
 
       return true;
     } catch (error) {
-      console.error('Failed to delete gift:', error);
-      setState(prev => ({
-        ...prev,
-        loading: { ...prev.loading, submitting: false },
-        error: '删除礼金记录失败'
-      }));
+      handleError(error, '删除礼金记录失败', setState);
       return false;
     }
   };
@@ -233,23 +215,18 @@ export const useAppStore = () => {
     try {
       setState(prev => ({ ...prev, loading: { ...prev.loading, submitting: true } }));
 
-      // 从localStorage加载现有记录
       const key = `giftlist_gifts_${state.currentEvent.id}`;
       const existingRecords: GiftRecord[] = JSON.parse(localStorage.getItem(key) || "[]");
 
-      // 查找并更新目标记录
       const updatedRecords = existingRecords.map(record => {
         if (record.id === giftId) {
-          // 重新序列化更新后的数据
           return { ...record, encryptedData: JSON.stringify(updatedData) };
         }
         return record;
       });
 
-      // 保存回localStorage
       localStorage.setItem(key, JSON.stringify(updatedRecords));
 
-      // 更新状态
       const updatedGifts = state.gifts.map(item => {
         if (item.record.id === giftId) {
           return { ...item, data: updatedData };
@@ -265,12 +242,7 @@ export const useAppStore = () => {
 
       return true;
     } catch (error) {
-      console.error('Failed to update gift:', error);
-      setState(prev => ({
-        ...prev,
-        loading: { ...prev.loading, submitting: false },
-        error: '更新礼金记录失败'
-      }));
+      handleError(error, '更新礼金记录失败', setState);
       return false;
     }
   };

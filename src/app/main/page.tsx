@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GiftType } from "@/types";
-import { Utils } from "@/lib/utils";
 import { useAppStore } from "@/store/appStore";
 import MainLayout from "@/components/layout/MainLayout";
 import GiftEntryForm from "@/components/business/GiftEntryForm";
 import Button from "@/components/ui/Button";
-import { formatDateTime } from "@/utils/format";
+import { formatDateTime, amountToChinese, formatCurrency } from "@/utils/format";
 import { BackupService, ExcelImportResult } from "@/lib/backup";
 import ImportExcelModal from "@/components/business/ImportExcelModal";
 import { speakError, speakText, isVoiceSupported } from "@/lib/voice";
@@ -135,7 +134,7 @@ export default function MainPage() {
       // 设置初始的大写金额
       const amount = parseFloat(selectedGift.data.amount.toString());
       if (!isNaN(amount)) {
-        setChineseAmount(Utils.amountToChinese(amount));
+        setChineseAmount(amountToChinese(amount));
       } else {
         setChineseAmount("");
       }
@@ -159,7 +158,7 @@ export default function MainPage() {
     setEditFormData({ ...editFormData, amount: value });
     const num = parseFloat(value);
     if (!isNaN(num)) {
-      setChineseAmount(Utils.amountToChinese(num));
+      setChineseAmount(amountToChinese(num));
     } else {
       setChineseAmount("");
     }
@@ -199,7 +198,7 @@ export default function MainPage() {
 
       // 语音播报修改成功
       if (isVoiceSupported()) {
-        speakText(`修改成功，${editFormData.name.trim()}，${Utils.amountToChinese(amount)}元，${editFormData.type}`);
+        speakText(`修改成功，${editFormData.name.trim()}，${amountToChinese(amount)}元，${editFormData.type}`);
       }
     } else {
       alert("更新失败，请重试");
@@ -331,7 +330,7 @@ export default function MainPage() {
           gift.name.length === 2
             ? `${gift.name[0]}　${gift.name[1]}`
             : gift.name;
-        const amountChinese = Utils.amountToChinese(gift.amount);
+        const amountChinese = amountToChinese(gift.amount);
         return `
         <div class="print-gift-column">
           <div class="book-cell name-cell">${name}</div>
@@ -675,7 +674,7 @@ export default function MainPage() {
                 <div className="flex justify-between p-2 rounded bg-gray-50 dark:bg-gray-800/30 border themed-border">
                   <span className="text-gray-500">总金额</span>
                   <span className="font-bold themed-text">
-                    {Utils.formatCurrency(totalAmount)}
+                    {formatCurrency(totalAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between p-2 rounded bg-gray-50 dark:bg-gray-800/30 border themed-border">
@@ -692,7 +691,7 @@ export default function MainPage() {
               {/* 页码导航 */}
               <div className="flex justify-between items-center mb-3 pb-3 border-b themed-border no-print text-sm">
                 <div className="flex items-center gap-3 font-bold themed-text">
-                  <span>本页: {Utils.formatCurrency(pageSubtotal)}</span>
+                  <span>本页: {formatCurrency(pageSubtotal)}</span>
                   <span className="text-gray-400">|</span>
                   <span>
                     人数:{" "}
@@ -761,7 +760,7 @@ export default function MainPage() {
                       <div className="book-cell amount-cell column-bottom">
                         {hasData ? (
                           <div className="amount-chinese">
-                            {Utils.amountToChinese(gift.data!.amount)}
+                            {amountToChinese(gift.data!.amount)}
                           </div>
                         ) : (
                           <span className="text-gray-300 print-placeholder">
@@ -952,7 +951,7 @@ export default function MainPage() {
 
                       <div className="font-semibold text-gray-600">大写：</div>
                       <div className="font-bold text-lg font-kaiti">
-                        {Utils.amountToChinese(selectedGift.data.amount)}
+                        {amountToChinese(selectedGift.data.amount)}
                       </div>
 
                       <div className="font-semibold text-gray-600">类型：</div>

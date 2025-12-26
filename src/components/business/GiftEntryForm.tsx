@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { GiftType } from "@/types";
-import { Utils } from "@/lib/utils";
+import { amountToChinese } from "@/utils/format";
 import { speakGiftData, speakSuccess, isVoiceSupported } from "@/lib/voice";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -31,7 +31,7 @@ const GiftEntryForm: React.FC<GiftEntryFormProps> = ({
     setFormData({ ...formData, amount: value });
     const num = parseFloat(value);
     if (!isNaN(num)) {
-      setChineseAmount(Utils.amountToChinese(num));
+      setChineseAmount(amountToChinese(num));
     } else {
       setChineseAmount("");
     }

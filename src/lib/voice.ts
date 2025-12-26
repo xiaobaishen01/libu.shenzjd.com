@@ -1,4 +1,4 @@
-import { Utils } from './utils';
+import { amountToChinese } from '@/utils/format';
 
 /**
  * 语音播报服务
@@ -122,7 +122,7 @@ export function speakGiftData(
   remark?: string
 ): Promise<void> {
   // 构建播报文本
-  const amountChinese = Utils.amountToChinese(amount);
+  const amountChinese = amountToChinese(amount);
   let text = `${name}，${amountChinese}元，${type}`;
 
   if (remark) {

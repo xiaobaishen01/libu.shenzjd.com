@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Utils } from '@/lib/utils';
 import { Event, GiftData } from '@/types';
+import { amountToChinese } from '@/utils/format';
 
 interface PrintViewProps {
   event: Event;
@@ -56,7 +56,7 @@ export default function PrintView({ event, gifts }: PrintViewProps) {
 
   // 格式化金额大写
   const formatChineseAmount = (amount: number) => {
-    return Utils.amountToChinese(amount);
+    return amountToChinese(amount);
   };
 
   // 格式化姓名（两个字中间加空格）
