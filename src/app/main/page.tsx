@@ -284,7 +284,6 @@ export default function MainPage() {
         <title>礼金簿打印 - ${state.currentEvent!.name}</title>
         <style>
           @page { size: A4 landscape; margin: 10mm; }
-          @page :first { counter-reset: page 1; }
           body { margin: 0; padding: 0; font-family: "KaiTi", "楷体", serif; background: ${colors.bg}; }
           .print-container { width: 100%; height: 100%; padding: 5mm; box-sizing: border-box; }
           .print-header { margin-bottom: 8mm; padding-bottom: 3mm; border-bottom: 3px solid ${colors.primary}; background: linear-gradient(to right, ${colors.bg}, white); padding: 3mm 2mm; border-radius: 4px; }
@@ -299,19 +298,6 @@ export default function MainPage() {
           .book-cell { display: grid; place-items: center; writing-mode: vertical-lr; text-orientation: mixed; font-weight: bold; padding: 10px 0; overflow: hidden; text-align: center; line-height: 1.2; }
           .name-cell { border-bottom: 2px solid ${colors.border}; font-size: 19pt; color: ${colors.primary}; background: white; }
           .amount-cell { font-size: 17pt; color: ${colors.primary}; background: white; }
-          .print-page-number {
-            position: fixed;
-            bottom: 3mm;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 9pt;
-            color: ${colors.secondary};
-            counter-increment: page;
-          }
-          .print-page-number::after {
-            content: "第" counter(page) "页";
-          }
           @media print {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           }
@@ -332,7 +318,6 @@ export default function MainPage() {
             </div>
           </div>
           <div class="print-gift-columns">${giftColumnsHTML}</div>
-          <div class="print-page-number"></div>
         </div>
         <script>
           setTimeout(() => { window.print(); setTimeout(() => { window.close(); }, 500); }, 100);
