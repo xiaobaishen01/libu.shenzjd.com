@@ -147,16 +147,6 @@ export default function SearchFilterModal({
                 <div className="mt-1">
                   显示 <strong>{filteredCount}</strong> / {totalCount} 条记录
                 </div>
-                {searchTerm && (
-                  <div className="mt-1">
-                    关键词: <strong>\"{searchTerm}\"</strong>
-                  </div>
-                )}
-                {filterType !== "all" && (
-                  <div className="mt-1">
-                    类型: <strong>{filterType}</strong>
-                  </div>
-                )}
               </div>
             </div>
           )}
