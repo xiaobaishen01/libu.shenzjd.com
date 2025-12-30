@@ -37,10 +37,6 @@ export default function MainPage() {
   const [filterType, setFilterType] = useState<"all" | GiftType>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // 备份提醒状态
-  const [showBackupReminder, setShowBackupReminder] = useState(false);
-  const [lastBackupReminder, setLastBackupReminder] = useState<number>(0);
-
   // 检查是否有会话，如果没有则返回首页
   useEffect(() => {
     if (!state.currentEvent) {
@@ -52,27 +48,6 @@ export default function MainPage() {
   useEffect(() => {
     syncDataToGuestScreen();
   }, [state.gifts, state.currentEvent?.id]);
-
-  // 备份提醒逻辑：每10条新记录或30分钟后提醒一次
-  useEffect(() => {
-    if (!state.currentEvent || state.gifts.length === 0) return;
-
-    const now = Date.now();
-    const lastReminder = lastBackupReminder || 0;
-    const timeSinceLastReminder = now - lastReminder;
-
-    // 检查是否需要提醒：30分钟 = 30 * 60 * 1000 = 1,800,000ms
-    const shouldTimeReminder = timeSinceLastReminder > 1800000;
-
-    // 检查记录数量：每10条记录提醒一次
-    const validGiftCount = state.gifts.filter(g => g.data && !g.data.abolished).length;
-    const shouldCountReminder = validGiftCount > 0 && validGiftCount % 10 === 0;
-
-    if ((shouldTimeReminder || shouldCountReminder) && !showBackupReminder) {
-      setShowBackupReminder(true);
-      setLastBackupReminder(now);
-    }
-  }, [state.gifts, state.currentEvent]);
 
   if (!state.currentEvent) {
     return null;
@@ -462,36 +437,6 @@ export default function MainPage() {
             >
               ×
             </button>
-          </div>
-        )}
-
-        {/* 备份提醒 */}
-        {showBackupReminder && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between animate-fade-in">
-            <div className="flex items-center gap-2 text-yellow-800 flex-1">
-              <span>💾</span>
-              <span className="text-sm">
-                <strong>数据备份提醒：</strong>您已录入 {state.gifts.filter(g => g.data && !g.data.abolished).length} 条礼金记录，
-                建议及时导出Excel备份，防止数据丢失！
-              </span>
-            </div>
-            <div className="flex gap-2 ml-2">
-              <button
-                onClick={() => {
-                  exportData();
-                  setShowBackupReminder(false);
-                }}
-                className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-bold"
-              >
-                立即备份
-              </button>
-              <button
-                onClick={() => setShowBackupReminder(false)}
-                className="text-yellow-600 hover:text-yellow-800 font-bold px-1"
-              >
-                ×
-              </button>
-            </div>
           </div>
         )}
 
