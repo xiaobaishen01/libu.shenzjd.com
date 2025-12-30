@@ -6,14 +6,25 @@
 # Build output
 /dist
 /out
+/.next
 
 # Testing
 /coverage
+/.nyc_output
+
+# Cache
+.vite/
+node_modules/.vite/
+.pnpm-store/
 
 # Misc
 .DS_Store
+Thumbs.db
 *.pem
 *.log
+*.bak
+*~
+*.tmp
 
 # Env files
 .env
@@ -32,3 +43,10 @@
 
 # Claude
 /.claude/
+
+# OS generated files
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
