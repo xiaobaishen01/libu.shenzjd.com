@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BackupService, ExcelPreview, ExcelImportResult } from '@/lib/backup';
 import { Event } from '@/types';
 import Button from '@/components/ui/Button';
-import { error, warning, success } from '@/components/ui/Toast';
+import { error, warning } from '@/components/ui/Toast';
 
 interface ImportExcelModalProps {
   isOpen: boolean;
